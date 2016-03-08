@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+  <Module Name="Scripts">
+    <File Path="Scripts\underscore-min.js" Url="Scripts/underscore-min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\bootstrap.min.js" Url="Scripts/bootstrap.min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\angular.min.js" Url="Scripts/angular.min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\mainCtrl.js" Url="Scripts/app/mainCtrl.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.module.js" Url="Scripts/app/app.module.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\dataSvc.ts" Url="Scripts/app/dataSvc.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\angular.js" Url="Scripts/angular.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\angular-route.min.js" Url="Scripts/angular-route.min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\dataSvc.js" Url="Scripts/app/dataSvc.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.models.js" Url="Scripts/app/app.models.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\ListService.js" Url="Scripts/app/ListService.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\Config.js" Url="Scripts/app/Config.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\camljs.js" Url="Scripts/camljs.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\Utils.js" Url="Scripts/app/Utils.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\tests\spec1.ts" Url="Scripts/tests/spec1.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\typings\linq\linq.jquery.d.ts" Url="Scripts/typings/linq/linq.jquery.d.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\typings\linq\linq.d.ts" Url="Scripts/typings/linq/linq.d.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\typings\linq\linq.3.0.3-Beta4.d.ts" Url="Scripts/typings/linq/linq.3.0.3-Beta4.d.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\linq.min.js" Url="Scripts/linq.min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.js.bundle" Url="Scripts/app/app.js.bundle" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.js" Url="Scripts/app/app.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.min.js" Url="Scripts/app/app.min.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\app\app.min.js.map" Url="Scripts/app/app.min.js.map" ReplaceContent="TRUE" />
+  </Module>
+</Elements>

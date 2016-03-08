@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectItem Type="Microsoft.VisualStudio.SharePoint.Module" DefaultFile="Elements.xml" SupportedTrustLevels="All" SupportedDeploymentScopes="Web, Site" xmlns="http://schemas.microsoft.com/VisualStudio/2010/SharePointTools/SharePointProjectItemModel">
+  <Files>
+    <ProjectItemFile Source="Elements.xml" Target="Scripts\" Type="ElementManifest" />
+    <ProjectItemFile Source="underscore-min.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="bootstrap.min.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="angular.min.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="app\mainCtrl.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.module.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\dataSvc.ts" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="angular.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="angular-route.min.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="app\dataSvc.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.models.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\microsoft-ajax\microsoft.ajax.d.ts" Target="Scripts\typings\microsoft-ajax\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\jquery\jquery.d.ts" Target="Scripts\typings\jquery\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-scenario.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-sanitize.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-route.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-resource.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-mocks.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular-cookies.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\angularjs\angular.d.ts" Target="Scripts\typings\angularjs\" Type="ElementFile" />
+    <ProjectItemFile Source="app\ListService.ts" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\Config.ts" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\ListService.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\Config.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\caml\camljs.d.ts" Target="Scripts\typings\caml\" Type="ElementFile" />
+    <ProjectItemFile Source="camljs.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="app\Utils.ts" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\Utils.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\jasmine\jasmine.d.ts" Target="Scripts\typings\jasmine\" Type="ElementFile" />
+    <ProjectItemFile Source="chutzpah.json" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="tests\spec1.ts" Target="Scripts\tests\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\linq\linq.jquery.d.ts" Target="Scripts\typings\linq\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\linq\linq.d.ts" Target="Scripts\typings\linq\" Type="ElementFile" />
+    <ProjectItemFile Source="typings\linq\linq.3.0.3-Beta4.d.ts" Target="Scripts\typings\linq\" Type="ElementFile" />
+    <ProjectItemFile Source="linq.min.js" Target="Scripts\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.js.bundle" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.min.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\app.min.js.map" Target="Scripts\app\" Type="ElementFile" />
+  </Files>
+</ProjectItem>
