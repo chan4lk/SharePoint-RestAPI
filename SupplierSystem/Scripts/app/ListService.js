@@ -15,24 +15,16 @@ var App;
             this.context = SP.ClientContext.get_current();
         }
         ListService.prototype.createLists = function (names) {
-            var deffer = this.$q.defer();
-            var promises = [];
-            for (var i = 0; i < names.length; i++) {
-                var promise = this.createList(names[i]);
-                promises.push(promise);
-            }
+            var _this = this;
+            var promise = this.$q.when(false);
 
-            this.$q.all(promises).then(function (oks) {
-                var sucessCount = Enumerable.From(oks).Where(function (ok) {
-                    return ok;
-                }).Count();
-                var allOk = sucessCount === oks.length;
-                deffer.resolve(allOk);
-            }).catch(function (messages) {
-                deffer.reject(messages);
+            names.forEach(function (name) {
+                promise = promise.then(function (sucess) {
+                    return _this.createList(name);
+                });
             });
 
-            return deffer.promise;
+            return promise;
         };
 
         ListService.prototype.getHostList = function (title) {
@@ -50,7 +42,7 @@ var App;
             var executor = new SP.RequestExecutor(this.appWebUrl);
 
             executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title&@target='" + this.hostWebUrl + "'",
+                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'",
                 method: App.Constants.HTTP.GET,
                 headers: {
                     "Accept": "application/json; odata=verbose",
@@ -66,10 +58,12 @@ var App;
 
                     var site = Enumerable.From(sites).Where(function (item) {
                         return item.Title == title;
-                    }).Single();
+                    }).Select(function (item) {
+                        return item;
+                    }).SingleOrDefault(null);
 
-                    if (site) {
-                        deffered.resolve(true);
+                    if (site != null) {
+                        deffered.resolve(site.Id);
                     } else {
                         deffered.resolve(false);
                     }
@@ -89,30 +83,26 @@ var App;
             var executor = new SP.RequestExecutor(this.appWebUrl);
 
             executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?&@target='" + this.hostWebUrl + "'",
+                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'",
                 method: App.Constants.HTTP.POST,
                 headers: {
                     "Accept": "application/json; odata=verbose",
                     'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': document.getElementById('__REQUESTDIGEST').value
+                    'X-RequestDigest': App.Constants.FormDigest
                 },
-                data: JSON.stringify({
+                body: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
                     'BaseTemplate': SP.ListTemplateType.genericList,
                     'Description': title + ' list',
                     'Title': title
                 }),
                 success: function (data) {
-                    var sites = JSON.parse(data.body).d.results;
+                    var site = JSON.parse(data.body).d;
 
-                    var site = Enumerable.From(sites).Where(function (item) {
-                        return item.Title == title;
-                    }).Single();
-
-                    if (site) {
-                        deffered.resolve(true);
+                    if (site != null) {
+                        deffered.resolve(site.Id);
                     } else {
-                        deffered.resolve(false);
+                        deffered.reject(false);
                     }
                 },
                 error: function (message) {
@@ -139,7 +129,7 @@ var App;
                 },
                 data: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': 100,
+                    'BaseTemplate': SP.ListTemplateType.genericList,
                     'Description': title + ' list',
                     'Title': title,
                     'AllowContentTypes': true,
@@ -201,16 +191,20 @@ var App;
 
             fieldData.forEach(function (field) {
                 promise = promise.then(function (sucess) {
-                    return _this.addField(listId, field);
+                    return _this.addField(listId, field, toHostList);
                 });
             });
 
             return promise;
         };
 
-        ListService.prototype.addField = function (id, data) {
+        ListService.prototype.addField = function (id, data, toHostList) {
             var deffered = this.$q.defer();
             var formdigest = App.Constants.FormDigest;
+            var url = this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields";
+            if (toHostList) {
+                url = App.Constants.URL.appweb + "/_api/SP.AppContextSite(@target)/web/Lists(guid'" + id + "')/fields?@target='" + App.Constants.URL.hostWeb + "'";
+            }
 
             //this.getFormDigest()
             //    .then((formdigest) => {
@@ -220,7 +214,8 @@ var App;
                 headers: {
                     'Accept': 'application/json;odata=verbose',
                     'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': formdigest
+                    'X-RequestDigest': formdigest,
+                    'X-AddField': 'true'
                 },
                 body: JSON.stringify({
                     '__metadata': { 'type': 'SP.Field' },
@@ -228,7 +223,7 @@ var App;
                     'Title': data.name
                 }),
                 method: App.Constants.HTTP.POST,
-                url: this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields",
+                url: url,
                 success: function (response) {
                     var data = response.headers;
                     deffered.resolve(data);

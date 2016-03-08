@@ -89,18 +89,18 @@ module App {
                                 this.$scope.listInfo = listInfo;
                                 this.addFields(remainig);
                             }).catch((message) => {
-                                    alert("count not load lists " + message);
+                                    alert("could not load lists " + message);
                                 });
                         })
                         .catch((message) => {
-                            alert("count not create lists " + message);
+                            alert("could not create lists " + message);
                         });
                 } else {
-                    console.log(listNames.join(", ") + "are already exists");
+                    console.log(listNames.join(", ") + " lists already exists");
                 }
             }).catch((message) => {
                     console.log(message);
-                    alert("couln't recive list data " + message);
+                    alert("couldn't recive list data " + message);
                 });
         }
 
@@ -108,15 +108,39 @@ module App {
             this.listService.getHostList(Constants.LIST.review).then((isAvaialbe) => {
                 this.$scope.review = isAvaialbe;
                 if (!isAvaialbe) {
-                    this.listService.createHostList(Constants.LIST.review).then((isCreated) => {
+                    this.listService.createHostList(Constants.LIST.review).then((id) => {
                         console.log('Review List Created');
-                        this.$scope.review = isAvaialbe;
+                        this.$scope.review = true;
+                        this.addReviewFields(id);
                     }).catch((message) => {
-                            alert("count not create lists " + message);
+                            alert("could not create list review " + message);
                         });
                 }
             });
         }
+
+        addReviewFields(id: string) {
+            var fields: IFieldData[] = [
+                {
+                    displayName: Constants.FIELD.review.companyName,
+                    name: Constants.FIELD.review.companyName,
+                    type: SP.FieldType.text,
+                },
+                {
+                    displayName: Constants.FIELD.review.productName,
+                    name: Constants.FIELD.review.productName,
+                    type: SP.FieldType.text,
+                }
+            ];
+
+            this.listService.addFields(id, fields, true).then((success) => {
+                console.log("Review list fields added");
+            }).catch((message) => {
+                console.log(message);
+                alert("Review list fields adding fields");
+            });;
+        }
+
 
         addFields = (remainigLists: string[]) => {
             if (typeof this.$scope.listInfo == undefined) {
@@ -131,7 +155,9 @@ module App {
                         .From(this.$scope.listInfo)
                         .Where((info) => { return info.Title === title })
                         .Select((list) => { return list.Id; })
-                        .Single();
+                        .SingleOrDefault(null);
+
+                    if (id == null) return;
 
                     console.log('adding field to list ' + id);
 

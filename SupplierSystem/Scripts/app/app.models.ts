@@ -3,6 +3,7 @@
     export interface IListResuts {
         __metadata: any;
         Title: string;
+        Id: string;
     }
 
     export interface IFieldData {

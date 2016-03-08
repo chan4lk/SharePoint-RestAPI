@@ -37,7 +37,10 @@ var App;
                             return info.Title === title;
                         }).Select(function (list) {
                             return list.Id;
-                        }).Single();
+                        }).SingleOrDefault(null);
+
+                        if (id == null)
+                            return;
 
                         console.log('adding field to list ' + id);
 
@@ -142,17 +145,17 @@ var App;
                             _this.$scope.listInfo = listInfo;
                             _this.addFields(remainig);
                         }).catch(function (message) {
-                            alert("count not load lists " + message);
+                            alert("could not load lists " + message);
                         });
                     }).catch(function (message) {
-                        alert("count not create lists " + message);
+                        alert("could not create lists " + message);
                     });
                 } else {
-                    console.log(listNames.join(", ") + "are already exists");
+                    console.log(listNames.join(", ") + " lists already exists");
                 }
             }).catch(function (message) {
                 console.log(message);
-                alert("couln't recive list data " + message);
+                alert("couldn't recive list data " + message);
             });
         };
 
@@ -161,14 +164,38 @@ var App;
             this.listService.getHostList(App.Constants.LIST.review).then(function (isAvaialbe) {
                 _this.$scope.review = isAvaialbe;
                 if (!isAvaialbe) {
-                    _this.listService.createHostList(App.Constants.LIST.review).then(function (isCreated) {
+                    _this.listService.createHostList(App.Constants.LIST.review).then(function (id) {
                         console.log('Review List Created');
-                        _this.$scope.review = isAvaialbe;
+                        _this.$scope.review = true;
+                        _this.addReviewFields(id);
                     }).catch(function (message) {
-                        alert("count not create lists " + message);
+                        alert("could not create list review " + message);
                     });
                 }
             });
+        };
+
+        mainCtrl.prototype.addReviewFields = function (id) {
+            var fields = [
+                {
+                    displayName: App.Constants.FIELD.review.companyName,
+                    name: App.Constants.FIELD.review.companyName,
+                    type: SP.FieldType.text
+                },
+                {
+                    displayName: App.Constants.FIELD.review.productName,
+                    name: App.Constants.FIELD.review.productName,
+                    type: SP.FieldType.text
+                }
+            ];
+
+            this.listService.addFields(id, fields, true).then(function (success) {
+                console.log("Review list fields added");
+            }).catch(function (message) {
+                console.log(message);
+                alert("Review list fields adding fields");
+            });
+            ;
         };
         mainCtrl.$inject = ["$scope", "dataSvc", "ListService"];
         return mainCtrl;

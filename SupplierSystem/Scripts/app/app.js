@@ -437,24 +437,16 @@ var App;
             this.context = SP.ClientContext.get_current();
         }
         ListService.prototype.createLists = function (names) {
-            var deffer = this.$q.defer();
-            var promises = [];
-            for (var i = 0; i < names.length; i++) {
-                var promise = this.createList(names[i]);
-                promises.push(promise);
-            }
+            var _this = this;
+            var promise = this.$q.when(false);
 
-            this.$q.all(promises).then(function (oks) {
-                var sucessCount = Enumerable.From(oks).Where(function (ok) {
-                    return ok;
-                }).Count();
-                var allOk = sucessCount === oks.length;
-                deffer.resolve(allOk);
-            }).catch(function (messages) {
-                deffer.reject(messages);
+            names.forEach(function (name) {
+                promise = promise.then(function (sucess) {
+                    return _this.createList(name);
+                });
             });
 
-            return deffer.promise;
+            return promise;
         };
 
         ListService.prototype.getHostList = function (title) {
@@ -472,7 +464,7 @@ var App;
             var executor = new SP.RequestExecutor(this.appWebUrl);
 
             executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title&@target='" + this.hostWebUrl + "'",
+                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'",
                 method: App.Constants.HTTP.GET,
                 headers: {
                     "Accept": "application/json; odata=verbose",
@@ -488,10 +480,12 @@ var App;
 
                     var site = Enumerable.From(sites).Where(function (item) {
                         return item.Title == title;
-                    }).Single();
+                    }).Select(function (item) {
+                        return item;
+                    }).SingleOrDefault(null);
 
-                    if (site) {
-                        deffered.resolve(true);
+                    if (site != null) {
+                        deffered.resolve(site.Id);
                     } else {
                         deffered.resolve(false);
                     }
@@ -511,30 +505,26 @@ var App;
             var executor = new SP.RequestExecutor(this.appWebUrl);
 
             executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?&@target='" + this.hostWebUrl + "'",
+                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'",
                 method: App.Constants.HTTP.POST,
                 headers: {
                     "Accept": "application/json; odata=verbose",
                     'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': document.getElementById('__REQUESTDIGEST').value
+                    'X-RequestDigest': App.Constants.FormDigest
                 },
-                data: JSON.stringify({
+                body: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
                     'BaseTemplate': SP.ListTemplateType.genericList,
                     'Description': title + ' list',
                     'Title': title
                 }),
                 success: function (data) {
-                    var sites = JSON.parse(data.body).d.results;
+                    var site = JSON.parse(data.body).d;
 
-                    var site = Enumerable.From(sites).Where(function (item) {
-                        return item.Title == title;
-                    }).Single();
-
-                    if (site) {
-                        deffered.resolve(true);
+                    if (site != null) {
+                        deffered.resolve(site.Id);
                     } else {
-                        deffered.resolve(false);
+                        deffered.reject(false);
                     }
                 },
                 error: function (message) {
@@ -561,7 +551,7 @@ var App;
                 },
                 data: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': 100,
+                    'BaseTemplate': SP.ListTemplateType.genericList,
                     'Description': title + ' list',
                     'Title': title,
                     'AllowContentTypes': true,
@@ -623,68 +613,53 @@ var App;
 
             fieldData.forEach(function (field) {
                 promise = promise.then(function (sucess) {
-                    return _this.addField(listId, field);
+                    return _this.addField(listId, field, toHostList);
                 });
             });
 
             return promise;
         };
 
-        ListService.prototype.addField = function (id, data) {
-            var _this = this;
+        ListService.prototype.addField = function (id, data, toHostList) {
             var deffered = this.$q.defer();
+            var formdigest = App.Constants.FormDigest;
+            var url = this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields";
+            if (toHostList) {
+                url = App.Constants.URL.appweb + "/_api/SP.AppContextSite(@target)/web/Lists(guid'" + id + "')/fields?@target='" + App.Constants.URL.hostWeb + "'";
+            }
 
-            //var formdigest = Constants.FormDigest;
-            this.getFormDigest().then(function (formdigest) {
-                var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+            //this.getFormDigest()
+            //    .then((formdigest) => {
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
 
-                executor.executeAsync({
-                    headers: {
-                        'Accept': 'application/json;odata=verbose',
-                        'Content-Type': 'application/json;odata=verbose',
-                        'X-RequestDigest': formdigest
-                    },
-                    body: JSON.stringify({
-                        '__metadata': { 'type': 'SP.Field' },
-                        'FieldTypeKind': data.type,
-                        'Title': data.name
-                    }),
-                    method: App.Constants.HTTP.POST,
-                    url: _this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields",
-                    success: function (response) {
-                        var data = JSON.parse(response.body);
-                        deffered.resolve(data.d.results);
-                    },
-                    error: function (message) {
-                        deffered.reject(message);
-                    },
-                    Uint8Array: []
-                });
-                //this.$http({
-                //    url: this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/Fields",
-                //    headers: {
-                //        Accept: 'application/json;odata=verbose',
-                //        'Content-Type': 'application/json;odata=verbose',
-                //        'X-RequestDigest': formdigest,
-                //        'Cache-Control': 'no-cache'
-                //    },
-                //    method: Constants.HTTP.POST,
-                //    data: JSON.stringify({
-                //        '__metadata': { 'type': 'SP.Field' },
-                //        'Title': data.name,
-                //        'FieldTypeKind': data.type
-                //    })
-                //})
-                //    .then((response) => {
-                //        deffered.resolve(response.data.d.results);
-                //    })
-                //    .catch((message) => {
-                //        deffered.reject(message);
-                //    });
-            }).catch(function (message) {
-                deffered.reject(message);
+            executor.executeAsync({
+                headers: {
+                    'Accept': 'application/json;odata=verbose',
+                    'Content-Type': 'application/json;odata=verbose',
+                    'X-RequestDigest': formdigest,
+                    'X-AddField': 'true'
+                },
+                body: JSON.stringify({
+                    '__metadata': { 'type': 'SP.Field' },
+                    'FieldTypeKind': data.type,
+                    'Title': data.name
+                }),
+                method: App.Constants.HTTP.POST,
+                url: url,
+                success: function (response) {
+                    var data = response.headers;
+                    deffered.resolve(data);
+                },
+                error: function (message) {
+                    deffered.reject(message);
+                },
+                Uint8Array: []
             });
 
+            //})
+            //.catch((message) => {
+            //    deffered.reject(message);
+            //});
             return deffered.promise;
         };
         ListService.$inject = ["$http", "$q"];
@@ -734,7 +709,10 @@ var App;
                             return info.Title === title;
                         }).Select(function (list) {
                             return list.Id;
-                        }).Single();
+                        }).SingleOrDefault(null);
+
+                        if (id == null)
+                            return;
 
                         console.log('adding field to list ' + id);
 
@@ -839,17 +817,17 @@ var App;
                             _this.$scope.listInfo = listInfo;
                             _this.addFields(remainig);
                         }).catch(function (message) {
-                            alert("count not load lists " + message);
+                            alert("could not load lists " + message);
                         });
                     }).catch(function (message) {
-                        alert("count not create lists " + message);
+                        alert("could not create lists " + message);
                     });
                 } else {
-                    console.log(listNames.join(", ") + "are already exists");
+                    console.log(listNames.join(", ") + " lists already exists");
                 }
             }).catch(function (message) {
                 console.log(message);
-                alert("couln't recive list data " + message);
+                alert("couldn't recive list data " + message);
             });
         };
 
@@ -858,14 +836,38 @@ var App;
             this.listService.getHostList(App.Constants.LIST.review).then(function (isAvaialbe) {
                 _this.$scope.review = isAvaialbe;
                 if (!isAvaialbe) {
-                    _this.listService.createHostList(App.Constants.LIST.review).then(function (isCreated) {
+                    _this.listService.createHostList(App.Constants.LIST.review).then(function (id) {
                         console.log('Review List Created');
-                        _this.$scope.review = isAvaialbe;
+                        _this.$scope.review = true;
+                        _this.addReviewFields(id);
                     }).catch(function (message) {
-                        alert("count not create lists " + message);
+                        alert("could not create list review " + message);
                     });
                 }
             });
+        };
+
+        mainCtrl.prototype.addReviewFields = function (id) {
+            var fields = [
+                {
+                    displayName: App.Constants.FIELD.review.companyName,
+                    name: App.Constants.FIELD.review.companyName,
+                    type: SP.FieldType.text
+                },
+                {
+                    displayName: App.Constants.FIELD.review.productName,
+                    name: App.Constants.FIELD.review.productName,
+                    type: SP.FieldType.text
+                }
+            ];
+
+            this.listService.addFields(id, fields, true).then(function (success) {
+                console.log("Review list fields added");
+            }).catch(function (message) {
+                console.log(message);
+                alert("Review list fields adding fields");
+            });
+            ;
         };
         mainCtrl.$inject = ["$scope", "dataSvc", "ListService"];
         return mainCtrl;
