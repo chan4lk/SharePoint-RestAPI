@@ -55,7 +55,8 @@ module App {
                 POST: 'POST',
                 PATCH: 'PATCH',
                 PUT: 'PUT',
-                DELETE: 'DELETE'
+                DELETE: 'DELETE',
+                MERGE: 'MERGE'
             };
 
                 return methods;

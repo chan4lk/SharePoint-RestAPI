@@ -154,7 +154,7 @@ module App {
         createList(title: string): ng.IPromise<boolean> {
             var sucess = false;
             var deffered = this.$q.defer();
-            var requestDigest = <HTMLInputElement>document.getElementById('__REQUESTDIGEST');
+            var requestDigest = Constants.FormDigest;
 
             this.$http({
                 url: this.appWebUrl + '/_api/Web/Lists',
@@ -163,13 +163,15 @@ module App {
                 {
                     Accept: 'application/json;odata=verbose',
                     'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': requestDigest.value
+                    'X-RequestDigest': requestDigest
                 },
                 data: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
+                    'BaseTemplate': 100,
                     'Description': title + ' list',
                     'Title': title,
+                    'AllowContentTypes': true,
+                    'ContentTypesEnabled': true,
                 })
 
             }).then((resp) => {
@@ -225,83 +227,50 @@ module App {
         }
 
         addFields(listId: string, fieldData: IFieldData[], toHostList?: boolean): ng.IPromise<boolean> {
-            var deffered = this.$q.defer();
-            var promises: ng.IPromise<boolean>[] = [];
-            for (var i = 0; i < fieldData.length; i++) {
-                var promise = this.addField(listId, fieldData[i]);
-                promises.push(promise);
-            }
+            var promise = this.$q.when<boolean>(false);
 
-            this.$q.all(promises)
-                .then((oks) => {
-                    var sucessCount = Enumerable.From(oks).Where((ok: boolean) => { return ok; }).Count();
-                    var allOk = sucessCount === oks.length;
-                    deffered.resolve(allOk);
-                })
-                .catch((message) => {
-                    deffered.reject(message);
-                });
+            fieldData.forEach((field) => {
+                promise = promise.then((sucess) => { return this.addField(listId, field); });
+            });
 
-            return deffered.promise;
+            return promise;
+
         }
 
         addField(id: string, data: IFieldData): ng.IPromise<boolean> {
             var deffered = this.$q.defer();
-            //var formdigest = Constants.FormDigest;
-            this.getFormDigest()
-                .then((formdigest) => {
-            var executor = new SP.RequestExecutor(Constants.URL.appweb);
+            var formdigest = Constants.FormDigest;
+            //this.getFormDigest()
+            //    .then((formdigest) => {
+                    var executor = new SP.RequestExecutor(Constants.URL.appweb);
 
-            executor.executeAsync({
-                headers: {
-                    'Accept': 'application/json;odata=verbose',
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': formdigest
-                },
-                body: JSON.stringify({
-                    '__metadata': { 'type': 'SP.Field' },
-                    'Title': data.name,
-                    'FieldTypeKind': data.type
-                }),
-                method : Constants.HTTP.POST,
-                url: this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields",
-                success: (response) =>
-                {
-                    var data = JSON.parse(response.body);
-                    deffered.resolve(data.d.results);
-                },
-                error: (message) =>
-                {
-                    deffered.reject(message);
-                },
-                Uint8Array: []
-            });
+                    executor.executeAsync({
+                        headers: {
+                            'Accept': 'application/json;odata=verbose',
+                            'Content-Type': 'application/json;odata=verbose',
+                            'X-RequestDigest': formdigest,
+                        },
+                        body: JSON.stringify({
+                            '__metadata': { 'type': 'SP.Field' },
+                            'FieldTypeKind': data.type,
+                            'Title': data.name
+                        }),
+                        method: Constants.HTTP.POST,
+                        url: this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields",
+                        success: (response) => {
+                            var data = response.headers;
+                            deffered.resolve(data);
+                        },
+                        error: (message) => {
+                            deffered.reject(message);
+                        },
+                        Uint8Array: []
+                    });
 
-                    //this.$http({
-                    //    url: this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/Fields",
-                    //    headers: {
-                    //        Accept: 'application/json;odata=verbose',
-                    //        'Content-Type': 'application/json;odata=verbose',
-                    //        'X-RequestDigest': formdigest,
-                    //        'Cache-Control': 'no-cache'
-                    //    },
-                    //    method: Constants.HTTP.POST,
-                    //    data: JSON.stringify({
-                    //        '__metadata': { 'type': 'SP.Field' },
-                    //        'Title': data.name,
-                    //        'FieldTypeKind': data.type                                                      
-                    //    })
-                    //})
-                    //    .then((response) => {
-                    //        deffered.resolve(response.data.d.results);
-                    //    })
-                    //    .catch((message) => {
-                    //        deffered.reject(message);
-                    //    });
-                })
-                .catch((message) => {
-                    deffered.reject(message);
-                });
+                //})
+                //.catch((message) => {
+                //    deffered.reject(message);
+                //});
 
             return deffered.promise;
         }

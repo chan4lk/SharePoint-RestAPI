@@ -113,7 +113,8 @@ var App;
                     POST: 'POST',
                     PATCH: 'PATCH',
                     PUT: 'PUT',
-                    DELETE: 'DELETE'
+                    DELETE: 'DELETE',
+                    MERGE: 'MERGE'
                 };
 
                 return methods;
@@ -548,7 +549,7 @@ var App;
         ListService.prototype.createList = function (title) {
             var sucess = false;
             var deffered = this.$q.defer();
-            var requestDigest = document.getElementById('__REQUESTDIGEST');
+            var requestDigest = App.Constants.FormDigest;
 
             this.$http({
                 url: this.appWebUrl + '/_api/Web/Lists',
@@ -556,13 +557,15 @@ var App;
                 headers: {
                     Accept: 'application/json;odata=verbose',
                     'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': requestDigest.value
+                    'X-RequestDigest': requestDigest
                 },
                 data: JSON.stringify({
                     '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
+                    'BaseTemplate': 100,
                     'Description': title + ' list',
-                    'Title': title
+                    'Title': title,
+                    'AllowContentTypes': true,
+                    'ContentTypesEnabled': true
                 })
             }).then(function (resp) {
                 var id = resp.data.d.id;
@@ -615,24 +618,16 @@ var App;
         };
 
         ListService.prototype.addFields = function (listId, fieldData, toHostList) {
-            var deffered = this.$q.defer();
-            var promises = [];
-            for (var i = 0; i < fieldData.length; i++) {
-                var promise = this.addField(listId, fieldData[i]);
-                promises.push(promise);
-            }
+            var _this = this;
+            var promise = this.$q.when(false);
 
-            this.$q.all(promises).then(function (oks) {
-                var sucessCount = Enumerable.From(oks).Where(function (ok) {
-                    return ok;
-                }).Count();
-                var allOk = sucessCount === oks.length;
-                deffered.resolve(allOk);
-            }).catch(function (message) {
-                deffered.reject(message);
+            fieldData.forEach(function (field) {
+                promise = promise.then(function (sucess) {
+                    return _this.addField(listId, field);
+                });
             });
 
-            return deffered.promise;
+            return promise;
         };
 
         ListService.prototype.addField = function (id, data) {
@@ -651,8 +646,8 @@ var App;
                     },
                     body: JSON.stringify({
                         '__metadata': { 'type': 'SP.Field' },
-                        'Title': data.name,
-                        'FieldTypeKind': data.type
+                        'FieldTypeKind': data.type,
+                        'Title': data.name
                     }),
                     method: App.Constants.HTTP.POST,
                     url: _this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields",
