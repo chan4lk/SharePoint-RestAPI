@@ -96,7 +96,10 @@ var App;
                         }
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
-                            console.log(App.Constants.FIELD.category.id + ' field inserted');
+                            console.log('fields inserted');
+                            _this.dataService.LoadExternal().then(function (data) {
+                                console.log(data);
+                            });
                         }).catch(function (message) {
                             console.log(message);
                             alert(message);
@@ -152,6 +155,9 @@ var App;
                     });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
+                    _this.dataService.LoadExternal().then(function (data) {
+                        console.log(data);
+                    });
                 }
             }).catch(function (message) {
                 console.log(message);

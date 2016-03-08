@@ -97,6 +97,9 @@ module App {
                         });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
+                    this.dataService.LoadExternal().then((data) => {
+                        console.log(data);
+                    });
                 }
             }).catch((message) => {
                     console.log(message);
@@ -215,7 +218,10 @@ module App {
                     this.listService.addFields(
                         id, fieldData
                         ).then((inserted) => {
-                            console.log(Constants.FIELD.category.id + ' field inserted');
+                            console.log('fields inserted');
+                            this.dataService.LoadExternal().then((data) => {
+                                console.log(data);
+                            });
                         }).catch((message) => {
                             console.log(message);
                             alert(message);

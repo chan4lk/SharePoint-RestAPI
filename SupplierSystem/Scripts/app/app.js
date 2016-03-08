@@ -395,8 +395,68 @@ var App;
             return deffered.promise;
         };
 
-        DataService.prototype.addData = function () {
+        DataService.prototype.LoadExternal = function () {
+            var _this = this;
             var deffered = this.$q.defer();
+            var promises = this.$q.when(false);
+            var urls = [
+                App.Constants.URL.category,
+                App.Constants.URL.supplier,
+                App.Constants.URL.product
+            ];
+
+            this.loadOData(App.Constants.URL.supplier).then(function (supplierData) {
+                _this.loadOData(App.Constants.URL.category).then(function (categoryData) {
+                    _this.loadOData(App.Constants.URL.product).then(function (productData) {
+                        var data = {
+                            Products: productData,
+                            Categories: categoryData,
+                            Suppliers: supplierData
+                        };
+
+                        deffered.resolve(data);
+                    }).catch(onError);
+                }).catch(onError);
+            }).catch(onError);
+
+            var onError = function (message) {
+                deffered.reject(message);
+            };
+
+            return deffered.promise;
+        };
+
+        DataService.prototype.loadOData = function (url) {
+            var deffered = this.$q.defer();
+
+            this.$http({
+                url: "../_api/SP.WebProxy.invoke",
+                method: App.Constants.HTTP.POST,
+                data: JSON.stringify({
+                    "requestInfo": {
+                        "__metadata": { "type": "SP.WebRequestInfo" },
+                        "Url": url,
+                        "Method": "GET",
+                        "Headers": {
+                            "results": [{
+                                    "__metadata": { "type": "SP.KeyValue" },
+                                    "Key": "Accept",
+                                    "Value": "application/json;odata=verbose",
+                                    "ValueType": "Edm.String"
+                                }]
+                        }
+                    }
+                }),
+                headers: {
+                    "Accept": "application/json;odata=verbose",
+                    "Content-Type": "application/json;odata=verbose",
+                    "X-RequestDigest": App.Constants.FormDigest
+                }
+            }).then(function (data) {
+                deffered.resolve(data);
+            }).catch(function (message) {
+                deffered.reject(message);
+            });
 
             return deffered.promise;
         };
@@ -768,7 +828,10 @@ var App;
                         }
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
-                            console.log(App.Constants.FIELD.category.id + ' field inserted');
+                            console.log('fields inserted');
+                            _this.dataService.LoadExternal().then(function (data) {
+                                console.log(data);
+                            });
                         }).catch(function (message) {
                             console.log(message);
                             alert(message);
@@ -824,6 +887,9 @@ var App;
                     });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
+                    _this.dataService.LoadExternal().then(function (data) {
+                        console.log(data);
+                    });
                 }
             }).catch(function (message) {
                 console.log(message);

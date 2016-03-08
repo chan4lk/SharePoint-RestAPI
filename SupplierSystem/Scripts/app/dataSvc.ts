@@ -4,14 +4,14 @@
 /// <reference path="../typings/angularjs/angular.d.ts" />
 
 module App {
-    "use strict";       
+    "use strict";
 
     export interface IDataService {
         getProducts: () => ng.IPromise<IProduct[]>;
         getCategories: () => ng.IPromise<ICategory[]>;
         getSuppliers: () => ng.IPromise<ISupplier[]>;
         getUserName: () => ng.IPromise<string>;
-        addData(): ng.IPromise<boolean>;
+        LoadExternal(): ng.IPromise<IListData>
         loadData(): ng.IPromise<IListData>;
         addReview(review: IReview): ng.IPromise<boolean>;
     }
@@ -38,14 +38,14 @@ module App {
                 var name = web.get_currentUser().get_userId();
                 deffered.resolve(name);
             }, (sender, args) => {
-                deffered.reject(args.get_message());
-            });
+                    deffered.reject(args.get_message());
+                });
 
             return deffered.promise;
 
         }
 
-        getProducts() : ng.IPromise<IProduct[]> {
+        getProducts(): ng.IPromise<IProduct[]> {
             var deffered = this.$q.defer();
             var products: IProduct[] = new Array();
             var lists = this.context.get_web().get_lists();
@@ -59,7 +59,7 @@ module App {
                 Constants.FIELD.product.name,
                 Constants.FIELD.product.categoryId,
                 Constants.FIELD.product.supplierId,
-            ])); 
+            ]));
 
             this.context.executeQueryAsync((sender, args) => {
                 var count = items.get_count();
@@ -72,9 +72,9 @@ module App {
                 deffered.resolve(products);
 
             }, (sender, args) => {
-                deffered.reject(args.get_message());
-            });
-        
+                    deffered.reject(args.get_message());
+                });
+
             return deffered.promise;
         }
 
@@ -201,13 +201,76 @@ module App {
             return deffered.promise;
         }
 
-        addData(): ng.IPromise<boolean> {
+        LoadExternal(): ng.IPromise<IListData> {
             var deffered = this.$q.defer();
+            var promises = this.$q.when(false);
+            var urls = [
+                Constants.URL.category,
+                Constants.URL.supplier,
+                Constants.URL.product
+            ];
+
+            this.loadOData<ISupplier[]>(Constants.URL.supplier).then((supplierData) => {
+                this.loadOData<ICategory[]>(Constants.URL.category).then((categoryData) => {
+                    this.loadOData<IProduct[]>(Constants.URL.product).then((productData) => {
+                        var data: IListData =
+                            {
+                                Products: productData,
+                                Categories: categoryData,
+                                Suppliers: supplierData
+                            };
+
+                        deffered.resolve(data);
+                    }).catch(onError);
+                }).catch(onError);
+            }).catch(onError);
+
+            var onError = (message) => {
+                deffered.reject(message);
+            }
 
             return deffered.promise;
         }
 
-        loadData() : ng.IPromise<IListData> {
+        loadOData<T>(url: string): ng.IPromise<T> {
+            var deffered = this.$q.defer();
+
+            this.$http({
+                url: "../_api/SP.WebProxy.invoke",
+                method: Constants.HTTP.POST,
+                data: JSON.stringify(
+                    {
+                        "requestInfo": {
+                            "__metadata": { "type": "SP.WebRequestInfo" },
+                            "Url": url,
+                            "Method": "GET",
+                            "Headers": {
+                                "results": [{
+                                    "__metadata": { "type": "SP.KeyValue" },
+                                    "Key": "Accept",
+                                    "Value": "application/json;odata=verbose",
+                                    "ValueType": "Edm.String"
+                                }]
+                            }
+                        }
+                    }),
+                headers: {
+                    "Accept": "application/json;odata=verbose",
+                    "Content-Type": "application/json;odata=verbose",
+                    "X-RequestDigest": Constants.FormDigest
+                }
+            })
+                .then((data: T) => {
+                    deffered.resolve(data);
+                })
+                .catch((message) => {
+                    deffered.reject(message);
+                });
+
+            return deffered.promise;
+        }
+
+        loadData(): ng.IPromise<IListData> {
             var deffered = this.$q.defer();
 
             return deffered.promise;
