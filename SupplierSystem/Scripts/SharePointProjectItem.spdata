@@ -2,7 +2,6 @@
 <ProjectItem Type="Microsoft.VisualStudio.SharePoint.Module" DefaultFile="Elements.xml" SupportedTrustLevels="All" SupportedDeploymentScopes="Web, Site" xmlns="http://schemas.microsoft.com/VisualStudio/2010/SharePointTools/SharePointProjectItemModel">
   <Files>
     <ProjectItemFile Source="Elements.xml" Target="Scripts\" Type="ElementManifest" />
-    <ProjectItemFile Source="underscore-min.js" Target="Scripts\" Type="ElementFile" />
     <ProjectItemFile Source="bootstrap.min.js" Target="Scripts\" Type="ElementFile" />
     <ProjectItemFile Source="angular.min.js" Target="Scripts\" Type="ElementFile" />
     <ProjectItemFile Source="app\mainCtrl.js" Target="Scripts\app\" Type="ElementFile" />
@@ -42,5 +41,6 @@
     <ProjectItemFile Source="app\app.min.js.map" Target="Scripts\app\" Type="ElementFile" />
     <ProjectItemFile Source="app\baseService.ts" Target="Scripts\app\" Type="ElementFile" />
     <ProjectItemFile Source="app\baseService.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="underscore-min.js" Target="Scripts\" Type="ElementFile" />
   </Files>
 </ProjectItem>

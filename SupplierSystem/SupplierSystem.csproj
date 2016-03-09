@@ -114,9 +114,9 @@
     <Content Include="Scripts\typings\linq\linq.jquery.d.ts" />
     <Content Include="Scripts\typings\microsoft-ajax\microsoft.ajax.d.ts" />
     <Content Include="Scripts\typings\sharepoint\SharePoint.d.ts" />
-    <Content Include="Scripts\underscore-min.js" />
     <Content Include="Scripts\app\Utils.js" />
     <Content Include="Scripts\app\Utils.ts" />
+    <Content Include="Scripts\underscore-min.js" />
     <Content Include="Scripts\_references.js" />
   </ItemGroup>
   <ItemGroup>

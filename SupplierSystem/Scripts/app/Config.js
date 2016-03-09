@@ -94,6 +94,65 @@ var App;
             enumerable: true,
             configurable: true
         });
+
+        Object.defineProperty(Constants, "FieldsConfig", {
+            get: function () {
+                var category = [
+                    {
+                        displayName: Constants.FIELD.category.id,
+                        name: Constants.FIELD.category.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.category.name,
+                        name: Constants.FIELD.category.name,
+                        type: SP.FieldType.text
+                    }];
+
+                var supplier = [
+                    {
+                        displayName: Constants.FIELD.supplier.id,
+                        name: Constants.FIELD.supplier.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.supplier.companyName,
+                        name: Constants.FIELD.supplier.companyName,
+                        type: SP.FieldType.text
+                    }];
+
+                var product = [
+                    {
+                        displayName: Constants.FIELD.product.id,
+                        name: Constants.FIELD.product.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.product.name,
+                        name: Constants.FIELD.product.name,
+                        type: SP.FieldType.text
+                    },
+                    {
+                        displayName: Constants.FIELD.product.supplierId,
+                        name: Constants.FIELD.product.supplierId,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.product.categoryId,
+                        name: Constants.FIELD.product.categoryId,
+                        type: SP.FieldType.integer
+                    }
+                ];
+
+                return {
+                    Product: product,
+                    Category: category,
+                    Supplier: supplier
+                };
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Constants;
     })();
     App.Constants = Constants;

@@ -12,6 +12,11 @@ var App;
             this.$q = $q;
             this.baseSvc = baseSvc;
             this.context = SP.ClientContext.get_current();
+            this.productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
+
+            this.categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items?$select=CategoryID,CategoryName";
+
+            this.supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items?$select=SupplierID,CompanyName";
         }
         DataService.prototype.getUserName = function () {
             var deffered = this.$q.defer();
@@ -29,24 +34,43 @@ var App;
         };
 
         DataService.prototype.getProducts = function () {
-            var deffered = this.$q.defer();
-            return deffered.promise;
+            return this.getItems(this.productURL);
         };
 
         DataService.prototype.getCategories = function () {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems(this.categoryURL);
         };
 
         DataService.prototype.getSuppliers = function () {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems(this.supplierURL);
         };
 
         DataService.prototype.getAll = function () {
             var deffered = this.$q.defer();
+
+            this.$q.all([this.getProducts(), this.getCategories(), this.getSuppliers()]).then(function (resp) {
+                var data = {
+                    Products: resp[0],
+                    Categories: resp[1],
+                    Suppliers: resp[2]
+                };
+
+                deffered.resolve(data);
+            }).catch(function (error) {
+                deffered.reject(error);
+            });
+            ;
+
+            return deffered.promise;
+        };
+
+        DataService.prototype.getItems = function (url) {
+            var deffered = this.$q.defer();
+            this.baseSvc.getRequest(url).then(function (resp) {
+                deffered.resolve(resp.data.d.results);
+            }).catch(function (error) {
+                deffered.reject(error);
+            });
 
             return deffered.promise;
         };
@@ -84,9 +108,6 @@ var App;
         DataService.prototype.addData = function (data) {
             var _this = this;
             var deffered = this.$q.defer();
-            var productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items";
-            var categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items";
-            var supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items";
 
             var productPromise = this.$q.when(false);
             var categoryPromise = this.$q.when(false);
@@ -102,31 +123,31 @@ var App;
                 };
 
                 productPromise = productPromise.then(function (result) {
-                    return _this.addItem(data, productURL);
+                    return _this.addItem(data, _this.productURL);
                 });
             });
 
             data.Categories.forEach(function (category) {
                 var data = {
                     '__metadata': { 'type': 'SP.Data.CategoryListItem' },
-                    'CategoryID': category.ID,
-                    'CategoryName': category.Name
+                    'CategoryID': category.CategoryID,
+                    'CategoryName': category.CategoryName
                 };
 
                 categoryPromise = categoryPromise.then(function (result) {
-                    return _this.addItem(data, categoryURL);
+                    return _this.addItem(data, _this.categoryURL);
                 });
             });
 
             data.Suppliers.forEach(function (supplier) {
                 var data = {
                     '__metadata': { 'type': 'SP.Data.SupplierListItem' },
-                    'SupplierID': supplier.ID,
+                    'SupplierID': supplier.SupplierID,
                     'CompanyName': supplier.CompanyName
                 };
 
                 suppierPromise = suppierPromise.then(function (result) {
-                    return _this.addItem(data, supplierURL);
+                    return _this.addItem(data, _this.supplierURL);
                 });
             });
 

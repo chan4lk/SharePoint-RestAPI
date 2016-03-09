@@ -17,6 +17,7 @@
     <link rel="Stylesheet" type="text/css" href="../Content/App.css" />
 
     <script src="../Scripts/underscore-min.js"></script>
+
     <!-- Angular -->
     <script src="../Scripts/angular.min.js"></script>
 
@@ -39,7 +40,7 @@
 
     <div class="container" style="margin-top: 60px" data-ng-app="app">
         <div data-ng-controller="mainCtrl">
-            {{title}}     {{userName}}  
+            {{title}}   
         <div class="row clearfix">
             <div class="col-md-12-">
                 <form id="search_form" class="form-inline" action="javascript:alert( 'success!' );">
@@ -52,7 +53,7 @@
                             </select>
                         </div>
                         <div class="form-group col-md-4">
-                            <input type="text" name="search" id="search_text" class="form-control" placeholder="Search" required />
+                            <input type="text" name="search" data-ng-model="search" id="search_text" class="form-control" placeholder="Search" required />
                         </div>
                         <div class="form-group col-md-2 hide">
                             <input type="checkbox" class="form-control" id="search_online" />
@@ -75,24 +76,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr data-ng-repeat="product in products">
+                        <tr data-ng-repeat="product in Products | filter: search">
                             <td>
-                                <input type="checkbox" value="{{product.id}}" /></td>
-                            <td>{{product.productName}}</td>
-                            <td>{{product.supplierName}}</td>
-                            <td>{{product.categoryName}}</td>
+                                <input type="checkbox" value="{{product.ProductID}}" /></td>
+                            <td>{{product.ProductName}}</td>
+                            <td>{{product.Supplier.CompanyName}}</td>
+                            <td>{{product.Category.CategoryName}}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div id="loading" class="lead">
+            <div id="loading" ng-show="!Products" class="lead">
                 Loading...
             </div>
             <div class="row">
                 <input type="button" class="btn btn-default pull-right" id="Button1" data-ng-if="review" value="Review" />
-                <input type="button" class="btn btn-default pull-right" id="Button2" data-ng-click="addFields(['Supplier', 'Product', 'Category'])" data-ng-if="review" value="addFields" />
-                <input type="button" class="btn btn-default pull-right" id="add_fileds_btn" data-ng-click="load()" value="load" />
-
             </div>
         </div>
     </div>

@@ -36,41 +36,41 @@
     }
 
     export interface ISupplier {
-        ID: number;
+        SupplierID: number;
         CompanyName: string;
     }
 
     export interface ICategory {
-        ID: number;
-        Name: string;
+        CategoryID: number;
+        CategoryName: string;
     }
     
     export class Supplier implements ISupplier {
         
-        ID: number;
+        SupplierID: number;
         CompanyName: string;
 
         constructor(id: number, companyName: string) {
-            this.ID = id;
+            this.SupplierID = id;
             this.CompanyName = companyName;
         }
 
         static From(supplier: ISupplier) : Supplier {
-            return new Supplier(supplier.ID, supplier.CompanyName);
+            return new Supplier(supplier.SupplierID, supplier.CompanyName);
         }
     }
 
     export class Category implements ICategory {
-        ID: number;
-        Name: string;
+        CategoryID: number;
+        CategoryName: string;
 
         constructor(id: number, name: string) {
-            this.ID = id;
-            this.Name = name;
+            this.CategoryID = id;
+            this.CategoryName = name;
         }
 
         static From(category: ICategory): Category {
-            return new Category(category.ID, category.Name);
+            return new Category(category.CategoryID, category.CategoryName);
         }
     }
 
@@ -103,7 +103,7 @@
 
         setCategory(categories: ICategory[]) {
             for (var i = 0; i < categories.length; i++) {
-                if (categories[i].ID === this.CategoryID) {
+                if (categories[i].CategoryID === this.CategoryID) {
                     this.Category = categories[i];
                     break;
                 }
@@ -112,7 +112,7 @@
 
         setSupplier(suppliers: ISupplier[]) {
             for (var i = 0; i < suppliers.length; i++) {
-                if (suppliers[i].ID === this.SupplierID) {
+                if (suppliers[i].SupplierID === this.SupplierID) {
                     this.Supplier = suppliers[i];
                     break;
                 }

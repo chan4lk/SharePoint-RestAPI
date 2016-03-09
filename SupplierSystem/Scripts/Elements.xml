@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Elements xmlns="http://schemas.microsoft.com/sharepoint/">
   <Module Name="Scripts">
-    <File Path="Scripts\underscore-min.js" Url="Scripts/underscore-min.js" ReplaceContent="TRUE" />
     <File Path="Scripts\bootstrap.min.js" Url="Scripts/bootstrap.min.js" ReplaceContent="TRUE" />
     <File Path="Scripts\angular.min.js" Url="Scripts/angular.min.js" ReplaceContent="TRUE" />
     <File Path="Scripts\app\mainCtrl.js" Url="Scripts/app/mainCtrl.js" ReplaceContent="TRUE" />
@@ -16,10 +15,9 @@
     <File Path="Scripts\app\Utils.js" Url="Scripts/app/Utils.js" ReplaceContent="TRUE" />
     <File Path="Scripts\tests\spec1.ts" Url="Scripts/tests/spec1.ts" ReplaceContent="TRUE" />
     <File Path="Scripts\linq.min.js" Url="Scripts/linq.min.js" ReplaceContent="TRUE" />
-    <File Path="Scripts\app\app.js.bundle" Url="Scripts/app/app.js.bundle" ReplaceContent="TRUE" />
     <File Path="Scripts\app\app.js" Url="Scripts/app/app.js" ReplaceContent="TRUE" />
     <File Path="Scripts\app\app.min.js" Url="Scripts/app/app.min.js" ReplaceContent="TRUE" />
-    <File Path="Scripts\app\app.min.js.map" Url="Scripts/app/app.min.js.map" ReplaceContent="TRUE" />
     <File Path="Scripts\app\baseService.js" Url="Scripts/app/baseService.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\underscore-min.js" Url="Scripts/underscore-min.js" ReplaceContent="TRUE" />
   </Module>
 </Elements>

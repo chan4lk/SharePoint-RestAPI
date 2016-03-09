@@ -132,6 +132,65 @@ var App;
             enumerable: true,
             configurable: true
         });
+
+        Object.defineProperty(Constants, "FieldsConfig", {
+            get: function () {
+                var category = [
+                    {
+                        displayName: Constants.FIELD.category.id,
+                        name: Constants.FIELD.category.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.category.name,
+                        name: Constants.FIELD.category.name,
+                        type: SP.FieldType.text
+                    }];
+
+                var supplier = [
+                    {
+                        displayName: Constants.FIELD.supplier.id,
+                        name: Constants.FIELD.supplier.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.supplier.companyName,
+                        name: Constants.FIELD.supplier.companyName,
+                        type: SP.FieldType.text
+                    }];
+
+                var product = [
+                    {
+                        displayName: Constants.FIELD.product.id,
+                        name: Constants.FIELD.product.id,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.product.name,
+                        name: Constants.FIELD.product.name,
+                        type: SP.FieldType.text
+                    },
+                    {
+                        displayName: Constants.FIELD.product.supplierId,
+                        name: Constants.FIELD.product.supplierId,
+                        type: SP.FieldType.integer
+                    },
+                    {
+                        displayName: Constants.FIELD.product.categoryId,
+                        name: Constants.FIELD.product.categoryId,
+                        type: SP.FieldType.integer
+                    }
+                ];
+
+                return {
+                    Product: product,
+                    Category: category,
+                    Supplier: supplier
+                };
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Constants;
     })();
     App.Constants = Constants;
@@ -144,11 +203,11 @@ var App;
 (function (App) {
     var Supplier = (function () {
         function Supplier(id, companyName) {
-            this.ID = id;
+            this.SupplierID = id;
             this.CompanyName = companyName;
         }
         Supplier.From = function (supplier) {
-            return new Supplier(supplier.ID, supplier.CompanyName);
+            return new Supplier(supplier.SupplierID, supplier.CompanyName);
         };
         return Supplier;
     })();
@@ -156,11 +215,11 @@ var App;
 
     var Category = (function () {
         function Category(id, name) {
-            this.ID = id;
-            this.Name = name;
+            this.CategoryID = id;
+            this.CategoryName = name;
         }
         Category.From = function (category) {
-            return new Category(category.ID, category.Name);
+            return new Category(category.CategoryID, category.CategoryName);
         };
         return Category;
     })();
@@ -179,7 +238,7 @@ var App;
 
         Product.prototype.setCategory = function (categories) {
             for (var i = 0; i < categories.length; i++) {
-                if (categories[i].ID === this.CategoryID) {
+                if (categories[i].CategoryID === this.CategoryID) {
                     this.Category = categories[i];
                     break;
                 }
@@ -188,7 +247,7 @@ var App;
 
         Product.prototype.setSupplier = function (suppliers) {
             for (var i = 0; i < suppliers.length; i++) {
-                if (suppliers[i].ID === this.SupplierID) {
+                if (suppliers[i].SupplierID === this.SupplierID) {
                     this.Supplier = suppliers[i];
                     break;
                 }
@@ -380,6 +439,11 @@ var App;
             this.$q = $q;
             this.baseSvc = baseSvc;
             this.context = SP.ClientContext.get_current();
+            this.productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
+
+            this.categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items?$select=CategoryID,CategoryName";
+
+            this.supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items?$select=SupplierID,CompanyName";
         }
         DataService.prototype.getUserName = function () {
             var deffered = this.$q.defer();
@@ -397,24 +461,43 @@ var App;
         };
 
         DataService.prototype.getProducts = function () {
-            var deffered = this.$q.defer();
-            return deffered.promise;
+            return this.getItems(this.productURL);
         };
 
         DataService.prototype.getCategories = function () {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems(this.categoryURL);
         };
 
         DataService.prototype.getSuppliers = function () {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems(this.supplierURL);
         };
 
         DataService.prototype.getAll = function () {
             var deffered = this.$q.defer();
+
+            this.$q.all([this.getProducts(), this.getCategories(), this.getSuppliers()]).then(function (resp) {
+                var data = {
+                    Products: resp[0],
+                    Categories: resp[1],
+                    Suppliers: resp[2]
+                };
+
+                deffered.resolve(data);
+            }).catch(function (error) {
+                deffered.reject(error);
+            });
+            ;
+
+            return deffered.promise;
+        };
+
+        DataService.prototype.getItems = function (url) {
+            var deffered = this.$q.defer();
+            this.baseSvc.getRequest(url).then(function (resp) {
+                deffered.resolve(resp.data.d.results);
+            }).catch(function (error) {
+                deffered.reject(error);
+            });
 
             return deffered.promise;
         };
@@ -452,9 +535,6 @@ var App;
         DataService.prototype.addData = function (data) {
             var _this = this;
             var deffered = this.$q.defer();
-            var productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items";
-            var categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items";
-            var supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items";
 
             var productPromise = this.$q.when(false);
             var categoryPromise = this.$q.when(false);
@@ -470,31 +550,31 @@ var App;
                 };
 
                 productPromise = productPromise.then(function (result) {
-                    return _this.addItem(data, productURL);
+                    return _this.addItem(data, _this.productURL);
                 });
             });
 
             data.Categories.forEach(function (category) {
                 var data = {
                     '__metadata': { 'type': 'SP.Data.CategoryListItem' },
-                    'CategoryID': category.ID,
-                    'CategoryName': category.Name
+                    'CategoryID': category.CategoryID,
+                    'CategoryName': category.CategoryName
                 };
 
                 categoryPromise = categoryPromise.then(function (result) {
-                    return _this.addItem(data, categoryURL);
+                    return _this.addItem(data, _this.categoryURL);
                 });
             });
 
             data.Suppliers.forEach(function (supplier) {
                 var data = {
                     '__metadata': { 'type': 'SP.Data.SupplierListItem' },
-                    'SupplierID': supplier.ID,
+                    'SupplierID': supplier.SupplierID,
                     'CompanyName': supplier.CompanyName
                 };
 
                 suppierPromise = suppierPromise.then(function (result) {
-                    return _this.addItem(data, supplierURL);
+                    return _this.addItem(data, _this.supplierURL);
                 });
             });
 
@@ -836,57 +916,18 @@ var App;
 
                         var fieldData = [];
 
-                        if (title === App.Constants.LIST.category) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.category.id,
-                                    name: App.Constants.FIELD.category.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.category.name,
-                                    name: App.Constants.FIELD.category.name,
-                                    type: SP.FieldType.text
-                                }];
-                        } else if (title === App.Constants.LIST.supplier) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.supplier.id,
-                                    name: App.Constants.FIELD.supplier.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.supplier.companyName,
-                                    name: App.Constants.FIELD.supplier.companyName,
-                                    type: SP.FieldType.text
-                                }];
-                        } else if (title === App.Constants.LIST.product) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.product.id,
-                                    name: App.Constants.FIELD.product.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.name,
-                                    name: App.Constants.FIELD.product.name,
-                                    type: SP.FieldType.text
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.supplierId,
-                                    name: App.Constants.FIELD.product.supplierId,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.categoryId,
-                                    name: App.Constants.FIELD.product.categoryId,
-                                    type: SP.FieldType.integer
-                                }
-                            ];
-                        }
+                        if (title === App.Constants.LIST.category)
+                            fieldData = App.Constants.FieldsConfig.Category;
+                        else if (title === App.Constants.LIST.supplier)
+                            fieldData = App.Constants.FieldsConfig.Supplier;
+                        else if (title === App.Constants.LIST.product)
+                            fieldData = App.Constants.FieldsConfig.Product;
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
                             console.log('fields inserted');
+                            if (index == remainigLists.length - 1) {
+                                _this.loadExternalData();
+                            }
                         }).catch(function (message) {
                             console.log(message);
                             alert(message);
@@ -898,9 +939,6 @@ var App;
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-            $scope.load = function () {
-                _this.loadExternalData();
-            };
 
             this.displayUserName();
             this.createAppWebLists();
@@ -918,10 +956,25 @@ var App;
         mainCtrl.prototype.loadExternalData = function () {
             var _this = this;
             this.dataService.LoadExternal().then(function (data) {
-                console.log(data);
                 _this.dataService.addData(data).then(function (resp) {
-                    console.log("Product inserted");
+                    console.log("data inserted");
+                    _this.loadListData();
                 });
+            });
+        };
+
+        mainCtrl.prototype.loadListData = function () {
+            var _this = this;
+            this.dataService.getAll().then(function (listData) {
+                console.log(listData);
+                var products = [];
+                listData.Products.forEach(function (item) {
+                    var product = new App.Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
+                    product.resolve(listData.Categories, listData.Suppliers);
+                    products.push(product);
+                });
+
+                _this.$scope.Products = products;
             });
         };
 
@@ -955,9 +1008,7 @@ var App;
                     });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
-                    _this.dataService.LoadExternal().then(function (data) {
-                        console.log(data);
-                    });
+                    _this.loadListData();
                 }
             }).catch(function (message) {
                 console.log(message);

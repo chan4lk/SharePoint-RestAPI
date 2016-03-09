@@ -7,7 +7,7 @@ module App {
     // Create the module and define its dependencies.
     angular.module("app", [
         // Angular modules 
-       
+
         // Custom modules 
 
         // 3rd Party Modules

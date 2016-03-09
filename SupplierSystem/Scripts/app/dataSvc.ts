@@ -11,6 +11,7 @@ module App {
         getCategories: () => ng.IPromise<ICategory[]>;
         getSuppliers: () => ng.IPromise<ISupplier[]>;
         getUserName: () => ng.IPromise<string>;
+        getAll():  ng.IPromise<IListData>;
         LoadExternal(): ng.IPromise<IListData>
         loadData(): ng.IPromise<IListData>;
         addReview(review: IReview): ng.IPromise<boolean>;
@@ -23,12 +24,30 @@ module App {
         productItems: SP.ListItemCollection;
         categoryItems: SP.ListItemCollection;
         SupplierItems: SP.ListItemCollection;
-
+        productURL: string;
+        categoryURL: string;
+        supplierURL: string;
         constructor(
             private $http: ng.IHttpService,
             private $q: ng.IQService,
             private baseSvc: IbaseService) {
+
             this.context = SP.ClientContext.get_current();
+            this.productURL = Constants.URL.appweb
+                                + "/_api/lists/getbytitle('"
+                                + Constants.LIST.product
+                                + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
+
+            this.categoryURL = Constants.URL.appweb
+                                + "/_api/lists/getbytitle('"
+                                + Constants.LIST.category
+                                + "')/items?$select=CategoryID,CategoryName";
+
+            this.supplierURL = Constants.URL.appweb
+                                + "/_api/lists/getbytitle('"
+                                + Constants.LIST.supplier
+                                + "')/items?$select=SupplierID,CompanyName";
+
         }
 
         getUserName(): ng.IPromise<string> {
@@ -48,27 +67,48 @@ module App {
         }
 
         getProducts(): ng.IPromise<IProduct[]> {
-            var deffered = this.$q.defer();
-            return deffered.promise;
+            return this.getItems<IProduct[]>(this.productURL);
         }
 
         getCategories(): ng.IPromise<ICategory[]> {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems<ICategory[]>(this.categoryURL);
         }
 
         getSuppliers(): ng.IPromise<ISupplier[]> {
-            var deffered = this.$q.defer();
-
-            return deffered.promise;
+            return this.getItems<ISupplier[]>(this.supplierURL);
         }
 
         getAll(): ng.IPromise<IListData> {
             var deffered = this.$q.defer();
 
+            this.$q.all([this.getProducts(), this.getCategories(), this.getSuppliers()])
+                .then((resp) => {
+                    var data: IListData = {
+                        Products: resp[0],
+                        Categories: resp[1],
+                        Suppliers: resp[2]
+                    }
+
+                    deffered.resolve(data);
+                }).catch((error) => {
+                    deffered.reject(error);
+                });;
+
             return deffered.promise;
         }
+
+        getItems<T>(url: string): ng.IPromise<T> {
+            var deffered = this.$q.defer();
+            this.baseSvc.getRequest<any>(url)
+                .then((resp) => {
+                    deffered.resolve(resp.data.d.results);
+                }).catch((error) => {
+                    deffered.reject(error);
+                });
+
+            return deffered.promise;
+        }
+
 
         LoadExternal(): ng.IPromise<IListData> {
             var deffered = this.$q.defer();
@@ -102,14 +142,11 @@ module App {
 
         addData(data: IListData): ng.IPromise<boolean> {
             var deffered = this.$q.defer();
-            var productURL = Constants.URL.appweb + "/_api/lists/getbytitle('" + Constants.LIST.product + "')/items";
-            var categoryURL = Constants.URL.appweb + "/_api/lists/getbytitle('" + Constants.LIST.category + "')/items";
-            var supplierURL = Constants.URL.appweb + "/_api/lists/getbytitle('" + Constants.LIST.supplier + "')/items";
 
             var productPromise = this.$q.when(false);
             var categoryPromise = this.$q.when(false);
             var suppierPromise = this.$q.when(false);
-            
+
             data.Products.forEach((product) => {
 
                 var data = {
@@ -120,7 +157,10 @@ module App {
                     'SupplierID': product.SupplierID
                 }
 
-                productPromise = productPromise.then((result) => { return this.addItem(data, productURL); });
+                productPromise = productPromise
+                    .then((result) => {
+                        return this.addItem(data, this.productURL);
+                    });
 
             });
 
@@ -128,11 +168,14 @@ module App {
 
                 var data = {
                     '__metadata': { 'type': 'SP.Data.CategoryListItem' },
-                    'CategoryID': category.ID,
-                    'CategoryName': category.Name
+                    'CategoryID': category.CategoryID,
+                    'CategoryName': category.CategoryName
                 }
 
-                categoryPromise = categoryPromise.then((result) => { return this.addItem(data, categoryURL); });
+                categoryPromise = categoryPromise
+                    .then((result) => {
+                        return this.addItem(data, this.categoryURL);
+                    });
 
             });
 
@@ -140,19 +183,23 @@ module App {
 
                 var data = {
                     '__metadata': { 'type': 'SP.Data.SupplierListItem' },
-                    'SupplierID': supplier.ID,
+                    'SupplierID': supplier.SupplierID,
                     'CompanyName': supplier.CompanyName
                 }
 
-                suppierPromise = suppierPromise.then((result) => { return this.addItem(data, supplierURL); });
+                suppierPromise = suppierPromise
+                    .then((result) => {
+                        return this.addItem(data, this.supplierURL);
+                    });
 
             });
 
-            this.$q.all([productPromise, categoryPromise, suppierPromise]).then((oks) => {
-                deffered.resolve(true);
-            }).catch((error) => {
-                deffered.reject(false);
-            });
+            this.$q.all([productPromise, categoryPromise, suppierPromise])
+                .then((oks) => {
+                    deffered.resolve(true);
+                }).catch((error) => {
+                    deffered.reject(false);
+                });
 
             return deffered.promise;
         }

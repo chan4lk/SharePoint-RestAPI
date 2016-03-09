@@ -10,9 +10,7 @@ module App {
 
     interface ImainCtrlScope extends ng.IScope {
         title: string;
-        products: IProduct[];
-        categories: ICategory[];
-        suppliers: ISupplier[];
+        Products: Product[];
         userName: string;
         lists: string;
         review: boolean;
@@ -39,7 +37,6 @@ module App {
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-            $scope.load = () => { this.loadExternalData(); };
 
             this.displayUserName();
             this.createAppWebLists();
@@ -71,10 +68,26 @@ module App {
 
         loadExternalData() {
             this.dataService.LoadExternal().then((data) => {
-                console.log(data);
                 this.dataService.addData(data).then((resp) => {
-                    console.log("Product inserted");
+                    console.log("data inserted");
+                    this.loadListData();
                 });
+            });
+        }
+
+        loadListData() {
+            this.dataService.getAll().then((listData) => {
+                console.log(listData);
+                var products = [];
+                listData.Products.forEach((item) => {
+                    var product = new Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
+                    product.resolve(listData.Categories, listData.Suppliers);
+                    products.push(product);
+                });
+
+                this.$scope.Products = products;
+
+               
             });
         }
 
@@ -109,9 +122,7 @@ module App {
                         });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
-                    this.dataService.LoadExternal().then((data) => {
-                        console.log(data);
-                    });
+                    this.loadListData();
                 }
             }).catch((message) => {
                     console.log(message);
@@ -178,59 +189,17 @@ module App {
 
                     var fieldData: IFieldData[] = [];
 
-                    if (title === Constants.LIST.category) {
-                        fieldData = [
-                            {
-                                displayName: Constants.FIELD.category.id,
-                                name: Constants.FIELD.category.id,
-                                type: SP.FieldType.integer
-                            },
-                            {
-                                displayName: Constants.FIELD.category.name,
-                                name: Constants.FIELD.category.name,
-                                type: SP.FieldType.text
-                            }];
-                    } else if (title === Constants.LIST.supplier) {
-                        fieldData = [
-                            {
-                                displayName: Constants.FIELD.supplier.id,
-                                name: Constants.FIELD.supplier.id,
-                                type: SP.FieldType.integer
-                            },
-                            {
-                                displayName: Constants.FIELD.supplier.companyName,
-                                name: Constants.FIELD.supplier.companyName,
-                                type: SP.FieldType.text
-                            }];
-                    } else if (title === Constants.LIST.product) {
-                        fieldData = [
-                            {
-                                displayName: Constants.FIELD.product.id,
-                                name: Constants.FIELD.product.id,
-                                type: SP.FieldType.integer
-                            },
-                            {
-                                displayName: Constants.FIELD.product.name,
-                                name: Constants.FIELD.product.name,
-                                type: SP.FieldType.text
-                            },
-                            {
-                                displayName: Constants.FIELD.product.supplierId,
-                                name: Constants.FIELD.product.supplierId,
-                                type: SP.FieldType.integer
-                            },
-                            {
-                                displayName: Constants.FIELD.product.categoryId,
-                                name: Constants.FIELD.product.categoryId,
-                                type: SP.FieldType.integer
-                            },
-                        ];
-                    }
+                    if (title === Constants.LIST.category) fieldData = Constants.FieldsConfig.Category;
+                    else if (title === Constants.LIST.supplier) fieldData = Constants.FieldsConfig.Supplier;
+                    else if (title === Constants.LIST.product) fieldData = Constants.FieldsConfig.Product;
 
                     this.listService.addFields(
                         id, fieldData
                         ).then((inserted) => {
-                            console.log('fields inserted');                            
+                            console.log('fields inserted'); 
+                            if (index == remainigLists.length - 1) {
+                                this.loadExternalData();
+                            }                   
                         }).catch((message) => {
                             console.log(message);
                             alert(message);

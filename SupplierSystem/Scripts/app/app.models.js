@@ -2,11 +2,11 @@
 (function (App) {
     var Supplier = (function () {
         function Supplier(id, companyName) {
-            this.ID = id;
+            this.SupplierID = id;
             this.CompanyName = companyName;
         }
         Supplier.From = function (supplier) {
-            return new Supplier(supplier.ID, supplier.CompanyName);
+            return new Supplier(supplier.SupplierID, supplier.CompanyName);
         };
         return Supplier;
     })();
@@ -14,11 +14,11 @@
 
     var Category = (function () {
         function Category(id, name) {
-            this.ID = id;
-            this.Name = name;
+            this.CategoryID = id;
+            this.CategoryName = name;
         }
         Category.From = function (category) {
-            return new Category(category.ID, category.Name);
+            return new Category(category.CategoryID, category.CategoryName);
         };
         return Category;
     })();
@@ -37,7 +37,7 @@
 
         Product.prototype.setCategory = function (categories) {
             for (var i = 0; i < categories.length; i++) {
-                if (categories[i].ID === this.CategoryID) {
+                if (categories[i].CategoryID === this.CategoryID) {
                     this.Category = categories[i];
                     break;
                 }
@@ -46,7 +46,7 @@
 
         Product.prototype.setSupplier = function (suppliers) {
             for (var i = 0; i < suppliers.length; i++) {
-                if (suppliers[i].ID === this.SupplierID) {
+                if (suppliers[i].SupplierID === this.SupplierID) {
                     this.Supplier = suppliers[i];
                     break;
                 }

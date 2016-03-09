@@ -46,57 +46,18 @@ var App;
 
                         var fieldData = [];
 
-                        if (title === App.Constants.LIST.category) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.category.id,
-                                    name: App.Constants.FIELD.category.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.category.name,
-                                    name: App.Constants.FIELD.category.name,
-                                    type: SP.FieldType.text
-                                }];
-                        } else if (title === App.Constants.LIST.supplier) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.supplier.id,
-                                    name: App.Constants.FIELD.supplier.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.supplier.companyName,
-                                    name: App.Constants.FIELD.supplier.companyName,
-                                    type: SP.FieldType.text
-                                }];
-                        } else if (title === App.Constants.LIST.product) {
-                            fieldData = [
-                                {
-                                    displayName: App.Constants.FIELD.product.id,
-                                    name: App.Constants.FIELD.product.id,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.name,
-                                    name: App.Constants.FIELD.product.name,
-                                    type: SP.FieldType.text
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.supplierId,
-                                    name: App.Constants.FIELD.product.supplierId,
-                                    type: SP.FieldType.integer
-                                },
-                                {
-                                    displayName: App.Constants.FIELD.product.categoryId,
-                                    name: App.Constants.FIELD.product.categoryId,
-                                    type: SP.FieldType.integer
-                                }
-                            ];
-                        }
+                        if (title === App.Constants.LIST.category)
+                            fieldData = App.Constants.FieldsConfig.Category;
+                        else if (title === App.Constants.LIST.supplier)
+                            fieldData = App.Constants.FieldsConfig.Supplier;
+                        else if (title === App.Constants.LIST.product)
+                            fieldData = App.Constants.FieldsConfig.Product;
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
                             console.log('fields inserted');
+                            if (index == remainigLists.length - 1) {
+                                _this.loadExternalData();
+                            }
                         }).catch(function (message) {
                             console.log(message);
                             alert(message);
@@ -108,9 +69,6 @@ var App;
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-            $scope.load = function () {
-                _this.loadExternalData();
-            };
 
             this.displayUserName();
             this.createAppWebLists();
@@ -128,10 +86,25 @@ var App;
         mainCtrl.prototype.loadExternalData = function () {
             var _this = this;
             this.dataService.LoadExternal().then(function (data) {
-                console.log(data);
                 _this.dataService.addData(data).then(function (resp) {
-                    console.log("Product inserted");
+                    console.log("data inserted");
+                    _this.loadListData();
                 });
+            });
+        };
+
+        mainCtrl.prototype.loadListData = function () {
+            var _this = this;
+            this.dataService.getAll().then(function (listData) {
+                console.log(listData);
+                var products = [];
+                listData.Products.forEach(function (item) {
+                    var product = new App.Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
+                    product.resolve(listData.Categories, listData.Suppliers);
+                    products.push(product);
+                });
+
+                _this.$scope.Products = products;
             });
         };
 
@@ -165,9 +138,7 @@ var App;
                     });
                 } else {
                     console.log(listNames.join(", ") + " lists already exists");
-                    _this.dataService.LoadExternal().then(function (data) {
-                        console.log(data);
-                    });
+                    _this.loadListData();
                 }
             }).catch(function (message) {
                 console.log(message);
