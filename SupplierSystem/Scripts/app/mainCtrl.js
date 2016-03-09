@@ -97,9 +97,6 @@ var App;
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
                             console.log('fields inserted');
-                            _this.dataService.LoadExternal().then(function (data) {
-                                console.log(data);
-                            });
                         }).catch(function (message) {
                             console.log(message);
                             alert(message);
@@ -111,6 +108,9 @@ var App;
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
+            $scope.load = function () {
+                _this.loadExternalData();
+            };
 
             this.displayUserName();
             this.createAppWebLists();
@@ -122,6 +122,16 @@ var App;
                 _this.$scope.userName = username;
             }).catch(function (message) {
                 alert(message);
+            });
+        };
+
+        mainCtrl.prototype.loadExternalData = function () {
+            var _this = this;
+            this.dataService.LoadExternal().then(function (data) {
+                console.log(data);
+                _this.dataService.addData(data).then(function (resp) {
+                    console.log("Product inserted");
+                });
             });
         };
 

@@ -13,6 +13,12 @@ module App {
             }
         }
 
+        static get STATUS() {
+            return {
+                OK: 200
+            }
+        }
+
         static get FormDigest() {
             return (<HTMLInputElement>document.getElementById('__REQUESTDIGEST')).value;
         }

@@ -90,7 +90,8 @@
             </div>
             <div class="row">
                 <input type="button" class="btn btn-default pull-right" id="Button1" data-ng-if="review" value="Review" />
-                <input type="button" class="btn btn-default pull-right" id="add_fileds_btn" data-ng-click="addFields(['Supplier', 'Product', 'Category'])" data-ng-if="review" value="addFields" />
+                <input type="button" class="btn btn-default pull-right" id="Button2" data-ng-click="addFields(['Supplier', 'Product', 'Category'])" data-ng-if="review" value="addFields" />
+                <input type="button" class="btn btn-default pull-right" id="add_fileds_btn" data-ng-click="load()" value="load" />
 
             </div>
         </div>

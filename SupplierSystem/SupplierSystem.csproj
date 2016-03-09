@@ -64,6 +64,8 @@
       <DependentUpon>app.js.bundle</DependentUpon>
     </None>
     <None Include="Scripts\app\app.module.ts" />
+    <Content Include="Scripts\app\baseService.js" />
+    <Content Include="Scripts\app\baseService.ts" />
     <Content Include="Scripts\camljs.js" />
     <Content Include="Scripts\app\Config.js" />
     <Content Include="Scripts\app\dataSvc.js" />

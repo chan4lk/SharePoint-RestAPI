@@ -29,7 +29,7 @@
     }
 
     export interface IProduct {
-        ID: number;
+        ProductID: number;
         ProductName: string;
         SupplierID: number;
         CategoryID: number;
@@ -76,7 +76,7 @@
 
     export class Product implements IProduct {
 
-        public ID: number;
+        public ProductID: number;
         public ProductName: string;
         public SupplierID: number;
         public CategoryID: number;
@@ -87,7 +87,7 @@
             productName: string,
             supplierId: number,
             categoryId: number) {
-            this.ID = id;
+            this.ProductID = id;
             this.ProductName = productName;
             this.CategoryID = categoryId;
             this.SupplierID = supplierId;
@@ -95,7 +95,7 @@
 
         static From(product: IProduct) : Product {
             return new Product(
-                product.ID,
+                product.ProductID,
                 product.ProductName,
                 product.SupplierID,
                 product.CategoryID);

@@ -100,9 +100,9 @@ module App {
 
             executor.executeAsync({
                 url: this.appWebUrl
-                + "/_api/SP.AppContextSite(@target)/web/lists?@target='"
-                + this.hostWebUrl
-                + "'",
+                                + "/_api/SP.AppContextSite(@target)/web/lists?@target='"
+                                + this.hostWebUrl
+                                + "'",
                 method: Constants.HTTP.POST,
                 headers: {
                     "Accept": "application/json; odata=verbose",

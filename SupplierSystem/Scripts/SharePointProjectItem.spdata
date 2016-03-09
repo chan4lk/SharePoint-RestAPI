@@ -40,5 +40,7 @@
     <ProjectItemFile Source="app\app.js" Target="Scripts\app\" Type="ElementFile" />
     <ProjectItemFile Source="app\app.min.js" Target="Scripts\app\" Type="ElementFile" />
     <ProjectItemFile Source="app\app.min.js.map" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\baseService.ts" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="app\baseService.js" Target="Scripts\app\" Type="ElementFile" />
   </Files>
 </ProjectItem>

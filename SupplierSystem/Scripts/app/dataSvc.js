@@ -7,9 +7,10 @@ var App;
     "use strict";
 
     var DataService = (function () {
-        function DataService($http, $q) {
+        function DataService($http, $q, baseSvc) {
             this.$http = $http;
             this.$q = $q;
+            this.baseSvc = baseSvc;
             this.context = SP.ClientContext.get_current();
         }
         DataService.prototype.getUserName = function () {
@@ -29,92 +30,17 @@ var App;
 
         DataService.prototype.getProducts = function () {
             var deffered = this.$q.defer();
-            var products = new Array();
-            var lists = this.context.get_web().get_lists();
-            var list = lists.getByTitle(App.Constants.LIST.product);
-            var query = new SP.CamlQuery();
-            var xml = new CamlBuilder().View().ToString();
-            query.set_viewXml(xml);
-            var items = list.getItems(query);
-            this.context.load(items, App.Utils.Include([
-                App.Constants.FIELD.product.id,
-                App.Constants.FIELD.product.name,
-                App.Constants.FIELD.product.categoryId,
-                App.Constants.FIELD.product.supplierId
-            ]));
-
-            this.context.executeQueryAsync(function (sender, args) {
-                var count = items.get_count();
-                for (var i = 0; i < count; i++) {
-                    var item = items.itemAt(i);
-                    var values = item.get_fieldValues();
-                    products.push(App.Product.From(values));
-                }
-
-                deffered.resolve(products);
-            }, function (sender, args) {
-                deffered.reject(args.get_message());
-            });
-
             return deffered.promise;
         };
 
         DataService.prototype.getCategories = function () {
-            var categories = [];
             var deffered = this.$q.defer();
-            var lists = this.context.get_web().get_lists();
-            var list = lists.getByTitle(App.Constants.LIST.category);
-            var query = new SP.CamlQuery();
-            var xml = new CamlBuilder().View().ToString();
-            query.set_viewXml(xml);
-            var items = list.getItems(query);
-            this.context.load(items, App.Utils.Include([
-                App.Constants.FIELD.category.id,
-                App.Constants.FIELD.category.name
-            ]));
-
-            this.context.executeQueryAsync(function (sender, args) {
-                var count = items.get_count();
-                for (var i = 0; i < count; i++) {
-                    var item = items.itemAt(i);
-                    var values = item.get_fieldValues();
-                    categories.push(App.Category.From(values));
-                }
-
-                deffered.resolve(categories);
-            }, function (sender, args) {
-                deffered.reject(args.get_message());
-            });
 
             return deffered.promise;
         };
 
         DataService.prototype.getSuppliers = function () {
-            var suppliers = [];
             var deffered = this.$q.defer();
-            var lists = this.context.get_web().get_lists();
-            var list = lists.getByTitle(App.Constants.LIST.supplier);
-            var query = new SP.CamlQuery();
-            var xml = new CamlBuilder().View().ToString();
-            query.set_viewXml(xml);
-            var items = list.getItems(query);
-            this.context.load(items, App.Utils.Include([
-                App.Constants.FIELD.supplier.id,
-                App.Constants.FIELD.supplier.companyName
-            ]));
-
-            this.context.executeQueryAsync(function (sender, args) {
-                var count = items.get_count();
-                for (var i = 0; i < count; i++) {
-                    var item = items.itemAt(i);
-                    var values = item.get_fieldValues();
-                    suppliers.push(App.Supplier.From(values));
-                }
-
-                deffered.resolve(suppliers);
-            }, function (sender, args) {
-                deffered.reject(args.get_message());
-            });
 
             return deffered.promise;
         };
@@ -122,76 +48,21 @@ var App;
         DataService.prototype.getAll = function () {
             var deffered = this.$q.defer();
 
-            var products = new Array();
-            var categories = new Array();
-            var suppliers = new Array();
-
-            var lists = this.context.get_web().get_lists();
-
-            var productList = lists.getByTitle(App.Constants.LIST.product);
-            var categoryList = lists.getByTitle(App.Constants.LIST.category);
-            var supplierList = lists.getByTitle(App.Constants.LIST.supplier);
-
-            var query = new SP.CamlQuery();
-            var xml = new CamlBuilder().View().ToString();
-            query.set_viewXml(xml);
-
-            var productitems = productList.getItems(query);
-            this.context.load(productitems, App.Utils.Include([
-                App.Constants.FIELD.product.id,
-                App.Constants.FIELD.product.name,
-                App.Constants.FIELD.product.categoryId,
-                App.Constants.FIELD.product.supplierId
-            ]));
-
-            var supplierItems = supplierList.getItems(query);
-            this.context.load(supplierItems, App.Utils.Include([
-                App.Constants.FIELD.supplier.id,
-                App.Constants.FIELD.supplier.companyName
-            ]));
-
-            var categoryItems = categoryList.getItems(query);
-            this.context.load(categoryItems, App.Utils.Include([
-                App.Constants.FIELD.category.id,
-                App.Constants.FIELD.category.name
-            ]));
-
-            this.context.executeQueryAsync(function (sender, args) {
-                var count = productitems.get_count();
-                for (var i = 0; i < count; i++) {
-                    var item = productitems.itemAt(i);
-                    var values = item.get_fieldValues();
-                    products.push(App.Product.From(values));
-                }
-
-                count = categoryItems.get_count();
-                for (var i = 0; i < count; i++) {
-                    var item = productitems.itemAt(i);
-                    var values = item.get_fieldValues();
-                    products.push(App.Product.From(values));
-                }
-
-                deffered.resolve(products);
-            }, function (sender, args) {
-                deffered.reject(args.get_message());
-            });
-
             return deffered.promise;
         };
 
         DataService.prototype.LoadExternal = function () {
             var _this = this;
             var deffered = this.$q.defer();
-            var promises = this.$q.when(false);
             var urls = [
                 App.Constants.URL.category,
                 App.Constants.URL.supplier,
                 App.Constants.URL.product
             ];
 
-            this.loadOData(App.Constants.URL.supplier).then(function (supplierData) {
-                _this.loadOData(App.Constants.URL.category).then(function (categoryData) {
-                    _this.loadOData(App.Constants.URL.product).then(function (productData) {
+            this.baseSvc.proxyRequest(App.Constants.URL.supplier).then(function (supplierData) {
+                _this.baseSvc.proxyRequest(App.Constants.URL.category).then(function (categoryData) {
+                    _this.baseSvc.proxyRequest(App.Constants.URL.product).then(function (productData) {
                         var data = {
                             Products: productData,
                             Categories: categoryData,
@@ -210,34 +81,69 @@ var App;
             return deffered.promise;
         };
 
-        DataService.prototype.loadOData = function (url) {
+        DataService.prototype.addData = function (data) {
+            var _this = this;
+            var deffered = this.$q.defer();
+            var productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items";
+            var categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items";
+            var supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items";
+
+            var productPromise = this.$q.when(false);
+            var categoryPromise = this.$q.when(false);
+            var suppierPromise = this.$q.when(false);
+
+            data.Products.forEach(function (product) {
+                var data = {
+                    '__metadata': { 'type': 'SP.Data.ProductListItem' },
+                    'ProductID': product.ProductID,
+                    'ProductName': product.ProductName,
+                    'CategoryID': product.CategoryID,
+                    'SupplierID': product.SupplierID
+                };
+
+                productPromise = productPromise.then(function (result) {
+                    return _this.addItem(data, productURL);
+                });
+            });
+
+            data.Categories.forEach(function (category) {
+                var data = {
+                    '__metadata': { 'type': 'SP.Data.CategoryListItem' },
+                    'CategoryID': category.ID,
+                    'CategoryName': category.Name
+                };
+
+                categoryPromise = categoryPromise.then(function (result) {
+                    return _this.addItem(data, categoryURL);
+                });
+            });
+
+            data.Suppliers.forEach(function (supplier) {
+                var data = {
+                    '__metadata': { 'type': 'SP.Data.SupplierListItem' },
+                    'SupplierID': supplier.ID,
+                    'CompanyName': supplier.CompanyName
+                };
+
+                suppierPromise = suppierPromise.then(function (result) {
+                    return _this.addItem(data, supplierURL);
+                });
+            });
+
+            this.$q.all([productPromise, categoryPromise, suppierPromise]).then(function (oks) {
+                deffered.resolve(true);
+            }).catch(function (error) {
+                deffered.reject(false);
+            });
+
+            return deffered.promise;
+        };
+
+        DataService.prototype.addItem = function (data, url) {
             var deffered = this.$q.defer();
 
-            this.$http({
-                url: "../_api/SP.WebProxy.invoke",
-                method: App.Constants.HTTP.POST,
-                data: JSON.stringify({
-                    "requestInfo": {
-                        "__metadata": { "type": "SP.WebRequestInfo" },
-                        "Url": url,
-                        "Method": "GET",
-                        "Headers": {
-                            "results": [{
-                                    "__metadata": { "type": "SP.KeyValue" },
-                                    "Key": "Accept",
-                                    "Value": "application/json;odata=verbose",
-                                    "ValueType": "Edm.String"
-                                }]
-                        }
-                    }
-                }),
-                headers: {
-                    "Accept": "application/json;odata=verbose",
-                    "Content-Type": "application/json;odata=verbose",
-                    "X-RequestDigest": App.Constants.FormDigest
-                }
-            }).then(function (data) {
-                deffered.resolve(data);
+            this.baseSvc.postRequest(url, data).then(function (resp) {
+                deffered.resolve(resp);
             }).catch(function (message) {
                 deffered.reject(message);
             });
@@ -256,7 +162,7 @@ var App;
 
             return deffered.promise;
         };
-        DataService.$inject = ["$http", "$q"];
+        DataService.$inject = ["$http", "$q", "baseService"];
         return DataService;
     })();
 

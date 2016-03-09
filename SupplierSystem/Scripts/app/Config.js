@@ -20,6 +20,16 @@ var App;
             configurable: true
         });
 
+        Object.defineProperty(Constants, "STATUS", {
+            get: function () {
+                return {
+                    OK: 200
+                };
+            },
+            enumerable: true,
+            configurable: true
+        });
+
         Object.defineProperty(Constants, "FormDigest", {
             get: function () {
                 return document.getElementById('__REQUESTDIGEST').value;

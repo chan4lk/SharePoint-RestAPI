@@ -19,10 +19,12 @@ module App {
         formDigestValue: string;
         listInfo: IListInfo[];
         addFields: (remainigLists: string[]) => void;
+        load();
     }
 
     interface ImainCtrl {
         activate: (userName: string) => void;
+        loadExternalData();
     }
 
     class mainCtrl implements ImainCtrl {
@@ -37,6 +39,7 @@ module App {
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
+            $scope.load = () => { this.loadExternalData(); };
 
             this.displayUserName();
             this.createAppWebLists();
@@ -64,6 +67,15 @@ module App {
         activate = (userName: string) => {
             this.$scope.userName = userName;
             this.$scope.$apply();
+        }
+
+        loadExternalData() {
+            this.dataService.LoadExternal().then((data) => {
+                console.log(data);
+                this.dataService.addData(data).then((resp) => {
+                    console.log("Product inserted");
+                });
+            });
         }
 
         createAppWebLists() {
@@ -218,10 +230,7 @@ module App {
                     this.listService.addFields(
                         id, fieldData
                         ).then((inserted) => {
-                            console.log('fields inserted');
-                            this.dataService.LoadExternal().then((data) => {
-                                console.log(data);
-                            });
+                            console.log('fields inserted');                            
                         }).catch((message) => {
                             console.log(message);
                             alert(message);

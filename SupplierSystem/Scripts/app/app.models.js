@@ -26,13 +26,13 @@
 
     var Product = (function () {
         function Product(id, productName, supplierId, categoryId) {
-            this.ID = id;
+            this.ProductID = id;
             this.ProductName = productName;
             this.CategoryID = categoryId;
             this.SupplierID = supplierId;
         }
         Product.From = function (product) {
-            return new Product(product.ID, product.ProductName, product.SupplierID, product.CategoryID);
+            return new Product(product.ProductID, product.ProductName, product.SupplierID, product.CategoryID);
         };
 
         Product.prototype.setCategory = function (categories) {
