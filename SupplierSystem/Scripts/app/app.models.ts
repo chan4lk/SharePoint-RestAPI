@@ -80,6 +80,8 @@
         public ProductName: string;
         public SupplierID: number;
         public CategoryID: number;
+        public CategoryName: string;
+        public CompanyName: string;
         public Supplier: ISupplier;
         public Category: ICategory;
 
@@ -108,6 +110,8 @@
                     break;
                 }
             }
+
+            this.CategoryName = this.Category.CategoryName;
         }
 
         setSupplier(suppliers: ISupplier[]) {
@@ -117,6 +121,8 @@
                     break;
                 }
             }
+
+            this.CompanyName = this.Supplier.CompanyName;
         }
 
         resolve(categoris: ICategory[], suppliers: ISupplier[]) {

@@ -243,6 +243,8 @@ var App;
                     break;
                 }
             }
+
+            this.CategoryName = this.Category.CategoryName;
         };
 
         Product.prototype.setSupplier = function (suppliers) {
@@ -252,6 +254,8 @@ var App;
                     break;
                 }
             }
+
+            this.CompanyName = this.Supplier.CompanyName;
         };
 
         Product.prototype.resolve = function (categoris, suppliers) {

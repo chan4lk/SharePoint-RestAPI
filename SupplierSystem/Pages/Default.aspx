@@ -46,20 +46,20 @@
                 <form id="search_form" class="form-inline" action="javascript:alert( 'success!' );">
                     <div class="">
                         <div class="form-group col-md-4">
-                            <select id="search_option" class="form-control">
-                                <option value="Product">Product Name</option>
-                                <option value="Supplier">Company Name</option>
-                                <option value="Category">Category Name</option>
+                            <select id="search_option" class="form-control" data-ng-model="mask">
+                                <option value="ProductName" selected="selected">Product Name</option>
+                                <option value="CompanyName">Company Name</option>
+                                <option value="CategoryName">Category Name</option>
                             </select>
                         </div>
                         <div class="form-group col-md-4">
-                            <input type="text" name="search" data-ng-model="search" id="search_text" class="form-control" placeholder="Search" required />
-                        </div>
-                        <div class="form-group col-md-2 hide">
-                            <input type="checkbox" class="form-control" id="search_online" />
+                            <input type="text" name="search" data-ng-model="search[mask]" id="search_text" class="form-control" placeholder="Search" required />
                         </div>
                         <div class="form-group col-md-2">
-                            <input id="search_btn" type="button" class="btn btn-default" value="Search" />
+                            <input type="checkbox" class="form-control" ng-model="isOnline" id="search_online" />
+                        </div>
+                        <div class="form-group col-md-2" ng-show="isOnline">
+                            <input id="search_btn" type="button" class="btn btn-default" value="Search" ng-click="seach()"/>
                         </div>
                     </div>
                 </form>
@@ -80,8 +80,8 @@
                             <td>
                                 <input type="checkbox" value="{{product.ProductID}}" /></td>
                             <td>{{product.ProductName}}</td>
-                            <td>{{product.Supplier.CompanyName}}</td>
-                            <td>{{product.Category.CategoryName}}</td>
+                            <td>{{product.CompanyName}}</td>
+                            <td>{{product.CategoryName}}</td>
                         </tr>
                     </tbody>
                 </table>
