@@ -445,11 +445,11 @@ var App;
                 method: App.Constants.HTTP.GET,
                 Uint8Array: [],
                 success: (function (response) {
-                    var body = JSON.parse(response.body);
-                    if (body.status === App.Constants.STATUS.OK) {
-                        deffer.resolve(body.data);
+                    if (response.statusCode === App.Constants.STATUS.OK) {
+                        var body = JSON.parse(response.body);
+                        deffer.resolve(body);
                     } else {
-                        deffer.reject(body.data);
+                        deffer.reject(response.statusCode);
                     }
                 }),
                 error: (function (message) {
@@ -885,7 +885,7 @@ var App;
             };
 
             this.$execSvc.postRequest(url, payload).then(function (resp) {
-                var id = resp.data.d.id;
+                var id = resp.d.Id;
                 if (typeof id !== undefined) {
                     deffered.resolve(true);
                 }
@@ -898,9 +898,9 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists";
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
             this.$execSvc.getRequest(url).then(function (resp) {
-                var results = resp.data.d.results;
+                var results = resp.d.results;
                 deffered.resolve(results);
             }).catch(function (reason) {
                 deffered.reject(reason);
@@ -912,8 +912,8 @@ var App;
         ListService.prototype.getFormDigest = function () {
             var deffered = this.$q.defer();
             var url = this.appWebUrl + "/_api/contextInfo";
-            this.$execSvc.getRequest(url).then(function (resp) {
-                var results = resp.data.d;
+            this.$execSvc.postRequest(url, {}).then(function (resp) {
+                var results = resp.d;
                 deffered.resolve(results.GetContextWebInformation.FormDigestValue);
             }).catch(function (reason) {
                 deffered.reject(reason);

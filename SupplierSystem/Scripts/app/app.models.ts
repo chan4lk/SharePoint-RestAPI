@@ -1,4 +1,53 @@
-﻿module App {
+﻿declare module SP {
+
+    module Responses {
+
+        export interface Metadata {
+            id: string;
+            uri: string;
+            etag: string;
+            type: string;
+        }
+
+        export interface Result {
+            __metadata: Metadata;
+            Id: string;
+            Title: string;
+        }
+
+        export interface ICreateListResponse {
+            d: Result;
+        }
+
+        export interface D {
+            results: Result[];
+        }
+
+        export interface IListResponse {
+            d: D;
+        }
+
+        export interface GetContextWebInformation {
+            __metadata: Metadata;
+            FormDigestTimeoutSeconds: number;
+            FormDigestValue: string;
+            LibraryVersion: string;
+            SiteFullUrl: string;
+            WebFullUrl: string;
+        }
+
+        export interface WebContextInfo {
+            GetContextWebInformation: GetContextWebInformation;
+        }
+
+        export interface IContextInfo {
+            d: WebContextInfo;
+        }
+    }
+
+}
+
+module App {
 
     export interface IListResuts {
         __metadata: any;

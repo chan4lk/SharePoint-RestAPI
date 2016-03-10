@@ -106,7 +106,7 @@ var App;
             };
 
             this.$execSvc.postRequest(url, payload).then(function (resp) {
-                var id = resp.data.d.id;
+                var id = resp.d.Id;
                 if (typeof id !== undefined) {
                     deffered.resolve(true);
                 }
@@ -119,9 +119,9 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists";
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
             this.$execSvc.getRequest(url).then(function (resp) {
-                var results = resp.data.d.results;
+                var results = resp.d.results;
                 deffered.resolve(results);
             }).catch(function (reason) {
                 deffered.reject(reason);
@@ -133,8 +133,8 @@ var App;
         ListService.prototype.getFormDigest = function () {
             var deffered = this.$q.defer();
             var url = this.appWebUrl + "/_api/contextInfo";
-            this.$execSvc.getRequest(url).then(function (resp) {
-                var results = resp.data.d;
+            this.$execSvc.postRequest(url, {}).then(function (resp) {
+                var results = resp.d;
                 deffered.resolve(results.GetContextWebInformation.FormDigestValue);
             }).catch(function (reason) {
                 deffered.reject(reason);

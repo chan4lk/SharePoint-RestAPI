@@ -20,11 +20,11 @@ var App;
                 method: App.Constants.HTTP.GET,
                 Uint8Array: [],
                 success: (function (response) {
-                    var body = JSON.parse(response.body);
-                    if (body.status === App.Constants.STATUS.OK) {
-                        deffer.resolve(body.data);
+                    if (response.statusCode === App.Constants.STATUS.OK) {
+                        var body = JSON.parse(response.body);
+                        deffer.resolve(body);
                     } else {
-                        deffer.reject(body.data);
+                        deffer.reject(response.statusCode);
                     }
                 }),
                 error: (function (message) {

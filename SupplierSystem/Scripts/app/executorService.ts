@@ -32,12 +32,12 @@ module App {
                 },
                 method: Constants.HTTP.GET,
                 Uint8Array: [],
-                success: ((response) => {
-                    var body = JSON.parse(response.body);
-                    if (body.status === Constants.STATUS.OK) {
-                        deffer.resolve(body.data);
+                success: ((response: SP.ResponseInfo) => {                   
+                    if (response.statusCode === Constants.STATUS.OK) {
+                        var body:T = JSON.parse(response.body);
+                        deffer.resolve(body);
                     } else {
-                        deffer.reject(body.data);
+                        deffer.reject(response.statusCode);
                     }
                 }),
                 error: ((message) => { deffer.reject(message); })

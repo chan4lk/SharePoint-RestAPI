@@ -54,8 +54,8 @@ module App {
                 + this.hostWebUrl
                 + "'";
 
-            this.$execSvc.getRequest(url)
-                .then((data: any) => {
+            this.$execSvc.getRequest<SP.Responses.IListResponse>(url)
+                .then((data) => {
                     var sites = data.d.results;
                     var titles = [];
 
@@ -126,9 +126,9 @@ module App {
                 'ContentTypesEnabled': true,
             };
 
-            this.$execSvc.postRequest(url, payload)
-                .then((resp: any) => {
-                    var id = resp.data.d.id;
+            this.$execSvc.postRequest<any, SP.Responses.ICreateListResponse>(url, payload)
+                .then((resp) => {
+                    var id = resp.d.Id;
                     if (typeof id !== undefined) {
                         deffered.resolve(true);
                     }
@@ -141,10 +141,10 @@ module App {
 
         getLists(): ng.IPromise<IListInfo[]> {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists";
-            this.$execSvc.getRequest(url)
-                .then((resp:any) => {
-                    var results: IListInfo[] = resp.data.d.results;
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
+            this.$execSvc.getRequest<SP.Responses.IListResponse>(url)
+                .then((resp) => {
+                    var results: IListInfo[] = resp.d.results;
                     deffered.resolve(results);
                 }).catch((reason) => {
                     deffered.reject(reason);
@@ -156,8 +156,8 @@ module App {
         getFormDigest(): ng.IPromise<string> {
             var deffered = this.$q.defer();
             var url = this.appWebUrl + "/_api/contextInfo";
-            this.$execSvc.getRequest(url).then((resp:any) => {
-                    var results = resp.data.d;
+            this.$execSvc.postRequest <any, SP.Responses.IContextInfo>(url, {}).then((resp) => {
+                    var results = resp.d;
                     deffered.resolve(results.GetContextWebInformation.FormDigestValue);
                 }).catch((reason) => {
                     deffered.reject(reason);
