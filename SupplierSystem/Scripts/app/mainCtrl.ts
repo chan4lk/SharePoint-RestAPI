@@ -14,11 +14,13 @@ module App {
         userName: string;
         lists: string;
         review: boolean;
+        search: any;
         formDigestValue: string;
         listInfo: IListInfo[];
         addFields: (remainigLists: string[]) => void;
         load();
         AddReview();
+        clearSearch(sender, args);
     }
 
     interface ImainCtrl {
@@ -41,9 +43,20 @@ module App {
             $scope.AddReview = () => {
                 this.addReview();
             }
+
+            $scope.clearSearch = (sender, args) => {
+                this.clearSearch();
+            };
+
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
+        }
+
+        clearSearch() {
+            for (var property in this.$scope.search) {
+                this.$scope.search[property] = undefined;
+            }
         }
 
         displayUserName() {

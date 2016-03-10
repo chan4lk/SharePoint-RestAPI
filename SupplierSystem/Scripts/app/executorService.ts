@@ -11,23 +11,19 @@ module App {
 
     }
 
-    executorService.$inject = ["$q"];
+    class ExecutorService implements IExecutorService{
+        static $inject: string[] = ["$q"];
 
-    function executorService($q: ng.IQService): IExecutorService {
-        var service: IbaseService = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
+        private executor: SP.RequestExecutor;
 
+        constructor(private $q: ng.IQService) {
+            this.executor = new SP.RequestExecutor(Constants.URL.appweb);
+        }
 
-        function getData<T>(url: string): ng.IPromise<T> {
-            var deffer = $q.defer();
-            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+        getRequest<T>(url: string): ng.IPromise<T> {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers:
                 {
@@ -36,18 +32,24 @@ module App {
                 },
                 method: Constants.HTTP.GET,
                 Uint8Array: [],
-                success: ((response) => { deffer.resolve(response); }),
+                success: ((response) => {
+                    var body = JSON.parse(response.body);
+                    if (body.status === Constants.STATUS.OK) {
+                        deffer.resolve(body.data);
+                    } else {
+                        deffer.reject(body.data);
+                    }
+                }),
                 error: ((message) => { deffer.reject(message); })
             });
 
             return deffer.promise;
         }
 
-        function postData<T, U>(url: string, data: T): ng.IPromise<U> {
-            var deffer = $q.defer();
-            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+        postRequest<T, U>(url: string, data: T): ng.IPromise<U> {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers:
                 {
@@ -65,11 +67,10 @@ module App {
             return deffer.promise;
         }
 
-        function mergeData<T, U>(url: string, data: T): ng.IPromise<U> {
-            var deffer = $q.defer();
-            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+        mergeRequest<T, U>(url: string, data: T): ng.IPromise<U> {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers:
                 {
@@ -89,9 +90,8 @@ module App {
             return deffer.promise;
         }
 
-        function deleteData<T>(url: string): ng.IPromise<T> {
-            var deffer = $q.defer();
-            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+        deleteRequest<T>(url: string): ng.IPromise<T> {
+            var deffer = this.$q.defer();
 
             this.executor.executeAsync({
                 url: url,
@@ -109,10 +109,9 @@ module App {
             return deffer.promise;
         }
 
-        function loadOData<T>(url: string): ng.IPromise<T> {
-            var deffered = $q.defer();
-            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
-            executor.executeAsync({
+        proxyRequest<T>(url: string): ng.IPromise<T> {
+            var deffered = this.$q.defer();
+            this.executor.executeAsync({
                 url: "../_api/SP.WebProxy.invoke",
                 method: Constants.HTTP.POST,
                 body: JSON.stringify(
@@ -156,9 +155,7 @@ module App {
             return deffered.promise;
         }
 
-        return service;
-    }
+}
 
-
-    angular.module("app").factory("executorService", executorService);
+angular.module("app").service("executorService", ExecutorService);
 }

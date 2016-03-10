@@ -74,10 +74,21 @@ var App;
             $scope.AddReview = function () {
                 _this.addReview();
             };
+
+            $scope.clearSearch = function (sender, args) {
+                _this.clearSearch();
+            };
+
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
         }
+        mainCtrl.prototype.clearSearch = function () {
+            for (var property in this.$scope.search) {
+                this.$scope.search[property] = undefined;
+            }
+        };
+
         mainCtrl.prototype.displayUserName = function () {
             var _this = this;
             this.dataService.getUserName().then(function (username) {

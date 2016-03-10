@@ -7,9 +7,9 @@ var App;
     "use strict";
 
     var ListService = (function () {
-        function ListService($http, $q) {
-            this.$http = $http;
+        function ListService($q, $execSvc) {
             this.$q = $q;
+            this.$execSvc = $execSvc;
             this.appWebUrl = App.Constants.URL.appweb;
             this.hostWebUrl = App.Constants.URL.hostWeb;
             this.context = SP.ClientContext.get_current();
@@ -39,39 +39,29 @@ var App;
             /// </returns>
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
+            var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'";
 
-            executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'",
-                method: App.Constants.HTTP.GET,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'X-RequestDigest': document.getElementById('__REQUESTDIGEST').value
-                },
-                success: function (data) {
-                    var sites = JSON.parse(data.body).d.results;
-                    var titles = [];
+            this.$execSvc.getRequest(url).then(function (data) {
+                var sites = data.d.results;
+                var titles = [];
 
-                    for (var i = 0; i < sites.length; i++) {
-                        titles.push(sites[i].Title);
-                    }
+                for (var i = 0; i < sites.length; i++) {
+                    titles.push(sites[i].Title);
+                }
 
-                    var site = Enumerable.From(sites).Where(function (item) {
-                        return item.Title == title;
-                    }).Select(function (item) {
-                        return item;
-                    }).SingleOrDefault(null);
+                var site = Enumerable.From(sites).Where(function (item) {
+                    return item.Title == title;
+                }).Select(function (item) {
+                    return item;
+                }).SingleOrDefault(null);
 
-                    if (site != null) {
-                        deffered.resolve(site.Id);
-                    } else {
-                        deffered.resolve(false);
-                    }
-                },
-                error: function (message) {
-                    deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
+                if (site != null) {
+                    deffered.resolve(site.Id);
+                } else {
+                    deffered.resolve(false);
+                }
+            }).catch(function (message) {
+                deffered.reject(message.statusCode);
             });
 
             return deffered.promise;
@@ -80,62 +70,42 @@ var App;
         ListService.prototype.createHostList = function (title) {
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
+            var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'";
 
-            executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'",
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': App.Constants.FormDigest
-                },
-                body: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title
-                }),
-                success: function (data) {
-                    var site = JSON.parse(data.body).d;
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title
+            };
 
-                    if (site != null) {
-                        deffered.resolve(site.Id);
-                    } else {
-                        deffered.reject(false);
-                    }
-                },
-                error: function (message) {
-                    deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
+            this.$execSvc.postRequest(url, payload).then(function (data) {
+                var site = data.d;
+                if (site != null) {
+                    deffered.resolve(site.Id);
+                } else {
+                    deffered.reject(false);
+                }
+            }).catch(function (message) {
+                deffered.reject(message.statusCode);
             });
 
             return deffered.promise;
         };
 
         ListService.prototype.createList = function (title) {
-            var sucess = false;
             var deffered = this.$q.defer();
-            var requestDigest = App.Constants.FormDigest;
+            var url = this.appWebUrl + '/_api/Web/Lists';
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title,
+                'AllowContentTypes': true,
+                'ContentTypesEnabled': true
+            };
 
-            this.$http({
-                url: this.appWebUrl + '/_api/Web/Lists',
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    Accept: 'application/json;odata=verbose',
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': requestDigest
-                },
-                data: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title,
-                    'AllowContentTypes': true,
-                    'ContentTypesEnabled': true
-                })
-            }).then(function (resp) {
+            this.$execSvc.postRequest(url, payload).then(function (resp) {
                 var id = resp.data.d.id;
                 if (typeof id !== undefined) {
                     deffered.resolve(true);
@@ -149,14 +119,8 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/Web/Lists",
-                method: App.Constants.HTTP.GET,
-                headers: {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then(function (resp) {
+            var url = this.appWebUrl + "/_api/Web/Lists";
+            this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.data.d.results;
                 deffered.resolve(results);
             }).catch(function (reason) {
@@ -168,14 +132,8 @@ var App;
 
         ListService.prototype.getFormDigest = function () {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/contextInfo",
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then(function (resp) {
+            var url = this.appWebUrl + "/_api/contextInfo";
+            this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.data.d;
                 deffered.resolve(results.GetContextWebInformation.FormDigestValue);
             }).catch(function (reason) {
@@ -240,7 +198,7 @@ var App;
             //});
             return deffered.promise;
         };
-        ListService.$inject = ["$http", "$q"];
+        ListService.$inject = ["$q", "executorService"];
         return ListService;
     })();
 

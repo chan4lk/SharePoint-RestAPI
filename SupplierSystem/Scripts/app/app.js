@@ -291,20 +291,14 @@ var App;
 (function (App) {
     "use strict";
 
-    baseService.$inject = ["$http", "$q"];
-
-    function baseService($http, $q) {
-        var service = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
-
-        function getData(url) {
-            var deffer = $q.defer();
-            $http({
+    var baseService = (function () {
+        function baseService($http, $q) {
+            this.$http = $http;
+            this.$q = $q;
+        }
+        baseService.prototype.getRequest = function (url) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -318,11 +312,11 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function postData(url, data) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.postRequest = function (url, data) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -338,11 +332,11 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function mergeData(url, data) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.mergeRequest = function (url, data) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -360,11 +354,11 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function deleteData(url) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.deleteRequest = function (url) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'X-RequestDigest': App.Constants.FormDigest,
@@ -378,12 +372,12 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function loadOData(url) {
-            var deffered = $q.defer();
+        baseService.prototype.proxyRequest = function (url) {
+            var deffered = this.$q.defer();
 
-            $http({
+            this.$http({
                 url: "../_api/SP.WebProxy.invoke",
                 method: App.Constants.HTTP.POST,
                 data: JSON.stringify({
@@ -420,12 +414,12 @@ var App;
             });
 
             return deffered.promise;
-        }
+        };
+        baseService.$inject = ["$http", "$q"];
+        return baseService;
+    })();
 
-        return service;
-    }
-
-    angular.module("app").factory("baseService", baseService);
+    angular.module("app").service("baseService", baseService);
 })(App || (App = {}));
 
 ///#source 1 1 /Scripts/app/executorService.js
@@ -434,22 +428,15 @@ var App;
 (function (App) {
     "use strict";
 
-    executorService.$inject = ["$q"];
+    var ExecutorService = (function () {
+        function ExecutorService($q) {
+            this.$q = $q;
+            this.executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        }
+        ExecutorService.prototype.getRequest = function (url) {
+            var deffer = this.$q.defer();
 
-    function executorService($q) {
-        var service = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
-
-        function getData(url) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
-
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -458,7 +445,12 @@ var App;
                 method: App.Constants.HTTP.GET,
                 Uint8Array: [],
                 success: (function (response) {
-                    deffer.resolve(response);
+                    var body = JSON.parse(response.body);
+                    if (body.status === App.Constants.STATUS.OK) {
+                        deffer.resolve(body.data);
+                    } else {
+                        deffer.reject(body.data);
+                    }
                 }),
                 error: (function (message) {
                     deffer.reject(message);
@@ -466,13 +458,12 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function postData(url, data) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.postRequest = function (url, data) {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -491,13 +482,12 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function mergeData(url, data) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.mergeRequest = function (url, data) {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -518,11 +508,10 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function deleteData(url) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.deleteRequest = function (url) {
+            var deffer = this.$q.defer();
 
             this.executor.executeAsync({
                 url: url,
@@ -541,12 +530,11 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function loadOData(url) {
-            var deffered = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
-            executor.executeAsync({
+        ExecutorService.prototype.proxyRequest = function (url) {
+            var deffered = this.$q.defer();
+            this.executor.executeAsync({
                 url: "../_api/SP.WebProxy.invoke",
                 method: App.Constants.HTTP.POST,
                 body: JSON.stringify({
@@ -586,12 +574,12 @@ var App;
             });
 
             return deffered.promise;
-        }
+        };
+        ExecutorService.$inject = ["$q"];
+        return ExecutorService;
+    })();
 
-        return service;
-    }
-
-    angular.module("app").factory("executorService", executorService);
+    angular.module("app").service("executorService", ExecutorService);
 })(App || (App = {}));
 
 ///#source 1 1 /Scripts/app/dataSvc.js
@@ -798,9 +786,9 @@ var App;
     "use strict";
 
     var ListService = (function () {
-        function ListService($http, $q) {
-            this.$http = $http;
+        function ListService($q, $execSvc) {
             this.$q = $q;
+            this.$execSvc = $execSvc;
             this.appWebUrl = App.Constants.URL.appweb;
             this.hostWebUrl = App.Constants.URL.hostWeb;
             this.context = SP.ClientContext.get_current();
@@ -830,39 +818,29 @@ var App;
             /// </returns>
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
+            var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'";
 
-            executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'",
-                method: App.Constants.HTTP.GET,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'X-RequestDigest': document.getElementById('__REQUESTDIGEST').value
-                },
-                success: function (data) {
-                    var sites = JSON.parse(data.body).d.results;
-                    var titles = [];
+            this.$execSvc.getRequest(url).then(function (data) {
+                var sites = data.d.results;
+                var titles = [];
 
-                    for (var i = 0; i < sites.length; i++) {
-                        titles.push(sites[i].Title);
-                    }
+                for (var i = 0; i < sites.length; i++) {
+                    titles.push(sites[i].Title);
+                }
 
-                    var site = Enumerable.From(sites).Where(function (item) {
-                        return item.Title == title;
-                    }).Select(function (item) {
-                        return item;
-                    }).SingleOrDefault(null);
+                var site = Enumerable.From(sites).Where(function (item) {
+                    return item.Title == title;
+                }).Select(function (item) {
+                    return item;
+                }).SingleOrDefault(null);
 
-                    if (site != null) {
-                        deffered.resolve(site.Id);
-                    } else {
-                        deffered.resolve(false);
-                    }
-                },
-                error: function (message) {
-                    deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
+                if (site != null) {
+                    deffered.resolve(site.Id);
+                } else {
+                    deffered.resolve(false);
+                }
+            }).catch(function (message) {
+                deffered.reject(message.statusCode);
             });
 
             return deffered.promise;
@@ -871,62 +849,42 @@ var App;
         ListService.prototype.createHostList = function (title) {
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
+            var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'";
 
-            executor.executeAsync({
-                url: this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?@target='" + this.hostWebUrl + "'",
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': App.Constants.FormDigest
-                },
-                body: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title
-                }),
-                success: function (data) {
-                    var site = JSON.parse(data.body).d;
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title
+            };
 
-                    if (site != null) {
-                        deffered.resolve(site.Id);
-                    } else {
-                        deffered.reject(false);
-                    }
-                },
-                error: function (message) {
-                    deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
+            this.$execSvc.postRequest(url, payload).then(function (data) {
+                var site = data.d;
+                if (site != null) {
+                    deffered.resolve(site.Id);
+                } else {
+                    deffered.reject(false);
+                }
+            }).catch(function (message) {
+                deffered.reject(message.statusCode);
             });
 
             return deffered.promise;
         };
 
         ListService.prototype.createList = function (title) {
-            var sucess = false;
             var deffered = this.$q.defer();
-            var requestDigest = App.Constants.FormDigest;
+            var url = this.appWebUrl + '/_api/Web/Lists';
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title,
+                'AllowContentTypes': true,
+                'ContentTypesEnabled': true
+            };
 
-            this.$http({
-                url: this.appWebUrl + '/_api/Web/Lists',
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    Accept: 'application/json;odata=verbose',
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': requestDigest
-                },
-                data: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title,
-                    'AllowContentTypes': true,
-                    'ContentTypesEnabled': true
-                })
-            }).then(function (resp) {
+            this.$execSvc.postRequest(url, payload).then(function (resp) {
                 var id = resp.data.d.id;
                 if (typeof id !== undefined) {
                     deffered.resolve(true);
@@ -940,14 +898,8 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/Web/Lists",
-                method: App.Constants.HTTP.GET,
-                headers: {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then(function (resp) {
+            var url = this.appWebUrl + "/_api/Web/Lists";
+            this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.data.d.results;
                 deffered.resolve(results);
             }).catch(function (reason) {
@@ -959,14 +911,8 @@ var App;
 
         ListService.prototype.getFormDigest = function () {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/contextInfo",
-                method: App.Constants.HTTP.POST,
-                headers: {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then(function (resp) {
+            var url = this.appWebUrl + "/_api/contextInfo";
+            this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.data.d;
                 deffered.resolve(results.GetContextWebInformation.FormDigestValue);
             }).catch(function (reason) {
@@ -1031,7 +977,7 @@ var App;
             //});
             return deffered.promise;
         };
-        ListService.$inject = ["$http", "$q"];
+        ListService.$inject = ["$q", "executorService"];
         return ListService;
     })();
 
@@ -1115,10 +1061,21 @@ var App;
             $scope.AddReview = function () {
                 _this.addReview();
             };
+
+            $scope.clearSearch = function (sender, args) {
+                _this.clearSearch();
+            };
+
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
         }
+        mainCtrl.prototype.clearSearch = function () {
+            for (var property in this.$scope.search) {
+                this.$scope.search[property] = undefined;
+            }
+        };
+
         mainCtrl.prototype.displayUserName = function () {
             var _this = this;
             this.dataService.getUserName().then(function (username) {

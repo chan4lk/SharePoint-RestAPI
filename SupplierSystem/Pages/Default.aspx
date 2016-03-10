@@ -46,7 +46,7 @@
                 <form id="search_form" class="form-inline" action="javascript:alert( 'success!' );">
                     <div class="">
                         <div class="form-group col-md-4">
-                            <select id="search_option" class="form-control" data-ng-model="mask">
+                            <select id="search_option" class="form-control" data-ng-init="mask=ProductName" data-ng-model="mask" data-ng-change="clearSearch()">
                                 <option value="ProductName" selected="selected">Product Name</option>
                                 <option value="CompanyName">Company Name</option>
                                 <option value="CategoryName">Category Name</option>

@@ -3,22 +3,15 @@ var App;
 (function (App) {
     "use strict";
 
-    executorService.$inject = ["$q"];
+    var ExecutorService = (function () {
+        function ExecutorService($q) {
+            this.$q = $q;
+            this.executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        }
+        ExecutorService.prototype.getRequest = function (url) {
+            var deffer = this.$q.defer();
 
-    function executorService($q) {
-        var service = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
-
-        function getData(url) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
-
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -27,7 +20,12 @@ var App;
                 method: App.Constants.HTTP.GET,
                 Uint8Array: [],
                 success: (function (response) {
-                    deffer.resolve(response);
+                    var body = JSON.parse(response.body);
+                    if (body.status === App.Constants.STATUS.OK) {
+                        deffer.resolve(body.data);
+                    } else {
+                        deffer.reject(body.data);
+                    }
                 }),
                 error: (function (message) {
                     deffer.reject(message);
@@ -35,13 +33,12 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function postData(url, data) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.postRequest = function (url, data) {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -60,13 +57,12 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function mergeData(url, data) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.mergeRequest = function (url, data) {
+            var deffer = this.$q.defer();
 
-            executor.executeAsync({
+            this.executor.executeAsync({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -87,11 +83,10 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function deleteData(url) {
-            var deffer = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+        ExecutorService.prototype.deleteRequest = function (url) {
+            var deffer = this.$q.defer();
 
             this.executor.executeAsync({
                 url: url,
@@ -110,12 +105,11 @@ var App;
             });
 
             return deffer.promise;
-        }
+        };
 
-        function loadOData(url) {
-            var deffered = $q.defer();
-            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
-            executor.executeAsync({
+        ExecutorService.prototype.proxyRequest = function (url) {
+            var deffered = this.$q.defer();
+            this.executor.executeAsync({
                 url: "../_api/SP.WebProxy.invoke",
                 method: App.Constants.HTTP.POST,
                 body: JSON.stringify({
@@ -155,10 +149,10 @@ var App;
             });
 
             return deffered.promise;
-        }
+        };
+        ExecutorService.$inject = ["$q"];
+        return ExecutorService;
+    })();
 
-        return service;
-    }
-
-    angular.module("app").factory("executorService", executorService);
+    angular.module("app").service("executorService", ExecutorService);
 })(App || (App = {}));

@@ -2,20 +2,14 @@
 (function (App) {
     "use strict";
 
-    baseService.$inject = ["$http", "$q"];
-
-    function baseService($http, $q) {
-        var service = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
-
-        function getData(url) {
-            var deffer = $q.defer();
-            $http({
+    var baseService = (function () {
+        function baseService($http, $q) {
+            this.$http = $http;
+            this.$q = $q;
+        }
+        baseService.prototype.getRequest = function (url) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -29,11 +23,11 @@
             });
 
             return deffer.promise;
-        }
+        };
 
-        function postData(url, data) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.postRequest = function (url, data) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -49,11 +43,11 @@
             });
 
             return deffer.promise;
-        }
+        };
 
-        function mergeData(url, data) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.mergeRequest = function (url, data) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'Accept': 'application/json;odata=verbose',
@@ -71,11 +65,11 @@
             });
 
             return deffer.promise;
-        }
+        };
 
-        function deleteData(url) {
-            var deffer = $q.defer();
-            $http({
+        baseService.prototype.deleteRequest = function (url) {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers: {
                     'X-RequestDigest': App.Constants.FormDigest,
@@ -89,12 +83,12 @@
             });
 
             return deffer.promise;
-        }
+        };
 
-        function loadOData(url) {
-            var deffered = $q.defer();
+        baseService.prototype.proxyRequest = function (url) {
+            var deffered = this.$q.defer();
 
-            $http({
+            this.$http({
                 url: "../_api/SP.WebProxy.invoke",
                 method: App.Constants.HTTP.POST,
                 data: JSON.stringify({
@@ -131,10 +125,10 @@
             });
 
             return deffered.promise;
-        }
+        };
+        baseService.$inject = ["$http", "$q"];
+        return baseService;
+    })();
 
-        return service;
-    }
-
-    angular.module("app").factory("baseService", baseService);
+    angular.module("app").service("baseService", baseService);
 })(App || (App = {}));

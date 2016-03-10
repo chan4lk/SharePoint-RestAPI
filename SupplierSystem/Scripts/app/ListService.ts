@@ -16,12 +16,13 @@ module App {
     }
 
     class ListService implements IListService {
-        static $inject: string[] = ["$http", "$q"];
+        static $inject: string[] = ["$q", "executorService"];
         context: SP.ClientContext;
         appWebUrl: string = Constants.URL.appweb;
         hostWebUrl: string = Constants.URL.hostWeb;
 
-        constructor(private $http: ng.IHttpService, private $q: ng.IQService) {
+        constructor(private $q: ng.IQService,
+            private $execSvc: IExecutorService) {
             this.context = SP.ClientContext.get_current();
         }
 
@@ -48,20 +49,14 @@ module App {
 
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
-
-            executor.executeAsync({
-                url: this.appWebUrl
+            var url = this.appWebUrl
                 + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='"
                 + this.hostWebUrl
-                + "'",
-                method: Constants.HTTP.GET,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'X-RequestDigest': (<HTMLInputElement>document.getElementById('__REQUESTDIGEST')).value
-                },
-                success: (data) => {
-                    var sites = JSON.parse(data.body).d.results;
+                + "'";
+
+            this.$execSvc.getRequest(url)
+                .then((data: any) => {
+                    var sites = data.d.results;
                     var titles = [];
 
                     for (var i = 0; i < sites.length; i++) {
@@ -82,13 +77,9 @@ module App {
                         deffered.resolve(false);
                     }
 
-                },
-                error: (message) => {
+                }).catch((message) => {
                     deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
-
-            });
+                });
 
             return deffered.promise;
         }
@@ -96,69 +87,47 @@ module App {
         createHostList(title: string): ng.IPromise<string> {
             var deffered = this.$q.defer();
 
-            var executor = new SP.RequestExecutor(this.appWebUrl);
+            var url = this.appWebUrl
+                + "/_api/SP.AppContextSite(@target)/web/lists?@target='"
+                + this.hostWebUrl
+                + "'";
 
-            executor.executeAsync({
-                url: this.appWebUrl
-                                + "/_api/SP.AppContextSite(@target)/web/lists?@target='"
-                                + this.hostWebUrl
-                                + "'",
-                method: Constants.HTTP.POST,
-                headers: {
-                    "Accept": "application/json; odata=verbose",
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': Constants.FormDigest
-                },
-                body: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title
-                }),
-                success: (data) => {
-                    var site = JSON.parse(data.body).d;
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title
+            };
 
+            this.$execSvc.postRequest(url, payload)
+                .then((data: any) => {
+                    var site = data.d;
                     if (site != null) {
                         deffered.resolve(site.Id);
                     } else {
                         deffered.reject(false);
                     }
-
-                },
-                error: (message) => {
+                }).catch((message) => {
                     deffered.reject(message.statusCode);
-                },
-                Uint8Array: []
-
-            });
+                });
 
             return deffered.promise;
         }
 
         createList(title: string): ng.IPromise<boolean> {
-            var sucess = false;
             var deffered = this.$q.defer();
-            var requestDigest = Constants.FormDigest;
+            var url = this.appWebUrl + '/_api/Web/Lists';
+            var payload = {
+                '__metadata': { 'type': 'SP.List' },
+                'BaseTemplate': SP.ListTemplateType.genericList,
+                'Description': title + ' list',
+                'Title': title,
+                'AllowContentTypes': true,
+                'ContentTypesEnabled': true,
+            };
 
-            this.$http({
-                url: this.appWebUrl + '/_api/Web/Lists',
-                method: Constants.HTTP.POST,
-                headers:
-                {
-                    Accept: 'application/json;odata=verbose',
-                    'Content-Type': 'application/json;odata=verbose',
-                    'X-RequestDigest': requestDigest
-                },
-                data: JSON.stringify({
-                    '__metadata': { 'type': 'SP.List' },
-                    'BaseTemplate': SP.ListTemplateType.genericList,
-                    'Description': title + ' list',
-                    'Title': title,
-                    'AllowContentTypes': true,
-                    'ContentTypesEnabled': true,
-                })
-
-            }).then((resp) => {
+            this.$execSvc.postRequest(url, payload)
+                .then((resp: any) => {
                     var id = resp.data.d.id;
                     if (typeof id !== undefined) {
                         deffered.resolve(true);
@@ -172,15 +141,9 @@ module App {
 
         getLists(): ng.IPromise<IListInfo[]> {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/Web/Lists",
-                method: Constants.HTTP.GET,
-                headers:
-                {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then((resp) => {
+            var url = this.appWebUrl + "/_api/Web/Lists";
+            this.$execSvc.getRequest(url)
+                .then((resp:any) => {
                     var results: IListInfo[] = resp.data.d.results;
                     deffered.resolve(results);
                 }).catch((reason) => {
@@ -192,15 +155,8 @@ module App {
 
         getFormDigest(): ng.IPromise<string> {
             var deffered = this.$q.defer();
-
-            this.$http({
-                url: this.appWebUrl + "/_api/contextInfo",
-                method: Constants.HTTP.POST,
-                headers:
-                {
-                    Accept: "application/json;odata=verbose"
-                }
-            }).then((resp) => {
+            var url = this.appWebUrl + "/_api/contextInfo";
+            this.$execSvc.getRequest(url).then((resp:any) => {
                     var results = resp.data.d;
                     deffered.resolve(results.GetContextWebInformation.FormDigestValue);
                 }).catch((reason) => {
@@ -222,7 +178,7 @@ module App {
 
         }
 
-        addField(id: string, data: IFieldData, toHostList?:boolean): ng.IPromise<boolean> {
+        addField(id: string, data: IFieldData, toHostList?: boolean): ng.IPromise<boolean> {
             var deffered = this.$q.defer();
             var formdigest = Constants.FormDigest;
             var url = this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields";
@@ -234,36 +190,36 @@ module App {
 
             //this.getFormDigest()
             //    .then((formdigest) => {
-                    var executor = new SP.RequestExecutor(Constants.URL.appweb);
+            var executor = new SP.RequestExecutor(Constants.URL.appweb);
 
-                    executor.executeAsync({
-                        headers: {
-                            'Accept': 'application/json;odata=verbose',
-                            'Content-Type': 'application/json;odata=verbose',
-                            'X-RequestDigest': formdigest,
-                            'X-AddField':'true'
-                        },
-                        body: JSON.stringify({
-                            '__metadata': { 'type': 'SP.Field' },
-                            'FieldTypeKind': data.type,
-                            'Title': data.name
-                        }),
-                        method: Constants.HTTP.POST,
-                        url: url,
-                        success: (response) => {
-                            var data = response.headers;
-                            deffered.resolve(data);
-                        },
-                        error: (message) => {
-                            deffered.reject(message);
-                        },
-                        Uint8Array: []
-                    });
+            executor.executeAsync({
+                headers: {
+                    'Accept': 'application/json;odata=verbose',
+                    'Content-Type': 'application/json;odata=verbose',
+                    'X-RequestDigest': formdigest,
+                    'X-AddField': 'true'
+                },
+                body: JSON.stringify({
+                    '__metadata': { 'type': 'SP.Field' },
+                    'FieldTypeKind': data.type,
+                    'Title': data.name
+                }),
+                method: Constants.HTTP.POST,
+                url: url,
+                success: (response) => {
+                    var data = response.headers;
+                    deffered.resolve(data);
+                },
+                error: (message) => {
+                    deffered.reject(message);
+                },
+                Uint8Array: []
+            });
 
-                //})
-                //.catch((message) => {
-                //    deffered.reject(message);
-                //});
+            //})
+            //.catch((message) => {
+            //    deffered.reject(message);
+            //});
 
             return deffered.promise;
         }

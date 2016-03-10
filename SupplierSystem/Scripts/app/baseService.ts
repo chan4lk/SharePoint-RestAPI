@@ -10,20 +10,15 @@
 
     }
 
-    baseService.$inject = ["$http", "$q"];
+    class baseService implements IbaseService {
+        static $inject: string[] = ["$http", "$q"];
+        constructor(private $http: ng.IHttpService, private $q: ng.IQService){
+            
+        }
 
-    function baseService($http: ng.IHttpService, $q: ng.IQService): IbaseService {
-        var service: IbaseService = {
-            getRequest: getData,
-            postRequest: postData,
-            mergeRequest: mergeData,
-            deleteRequest: deleteData,
-            proxyRequest: loadOData
-        };
-
-        function getData<T>(url: string): ng.IPromise<T> {
-            var deffer = $q.defer();
-            $http({
+        getRequest<T>(url: string): ng.IPromise<T> {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers:
                 {
@@ -40,9 +35,9 @@
             return deffer.promise;
         }
 
-        function postData<T, U>(url: string, data: T): ng.IPromise<U> {
-            var deffer = $q.defer();
-            $http({
+        postRequest<T, U>(url: string, data: T): ng.IPromise<U> {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers:
                 {
@@ -61,9 +56,9 @@
             return deffer.promise;
         }
 
-        function mergeData<T, U>(url: string, data: T): ng.IPromise<U> {
-            var deffer = $q.defer();
-            $http({
+        mergeRequest<T, U>(url: string, data: T): ng.IPromise<U> {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers:
                 {
@@ -84,9 +79,9 @@
             return deffer.promise;
         }
 
-        function deleteData<T>(url: string): ng.IPromise<T> {
-            var deffer = $q.defer();
-            $http({
+        deleteRequest<T>(url: string): ng.IPromise<T> {
+            var deffer = this.$q.defer();
+            this.$http({
                 url: url,
                 headers:
                 {
@@ -103,10 +98,10 @@
             return deffer.promise;
         }
 
-        function loadOData<T>(url: string): ng.IPromise<T> {
-            var deffered = $q.defer();
+        proxyRequest<T>(url: string): ng.IPromise<T> {
+            var deffered = this.$q.defer();
 
-            $http({
+            this.$http({
                 url: "../_api/SP.WebProxy.invoke",
                 method: Constants.HTTP.POST,
                 data: JSON.stringify(
@@ -147,9 +142,8 @@
 
             return deffered.promise;
         }
-
-        return service;
+        
     }
 
-    angular.module("app").factory("baseService", baseService);
+    angular.module("app").service("baseService", baseService);
 }
