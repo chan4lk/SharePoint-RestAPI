@@ -78,7 +78,7 @@
                     <tbody>
                         <tr data-ng-repeat="product in Products | filter: search">
                             <td>
-                                <input type="checkbox" value="{{product.ProductID}}" /></td>
+                                <input class="review" type="checkbox" value="{{product.ProductID}}" /></td>
                             <td>{{product.ProductName}}</td>
                             <td>{{product.CompanyName}}</td>
                             <td>{{product.CategoryName}}</td>
@@ -90,7 +90,7 @@
                 Loading...
             </div>
             <div class="row">
-                <input type="button" class="btn btn-default pull-right" id="Button1" data-ng-if="review" value="Review" />
+                <input type="button" class="btn btn-default pull-right" id="Button1" data-ng-if="review" value="Review" data-ng-click="AddReview()" />
             </div>
         </div>
     </div>

@@ -18,6 +18,7 @@ module App {
         listInfo: IListInfo[];
         addFields: (remainigLists: string[]) => void;
         load();
+        AddReview();
     }
 
     interface ImainCtrl {
@@ -37,7 +38,9 @@ module App {
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-
+            $scope.AddReview = () => {
+                this.addReview();
+            }
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
@@ -77,7 +80,7 @@ module App {
 
         loadListData() {
             this.dataService.getAll().then((listData) => {
-                console.log(listData);
+                console.log('All the data loaded from odata');
                 var products = [];
                 listData.Products.forEach((item) => {
                     var product = new Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
@@ -86,8 +89,6 @@ module App {
                 });
 
                 this.$scope.Products = products;
-
-               
             });
         }
 
@@ -162,11 +163,38 @@ module App {
             this.listService.addFields(id, fields, true).then((success) => {
                 console.log("Review list fields added");
             }).catch((message) => {
-                console.log(message);
-                alert("Review list fields adding fields");
-            });;
+                    console.log(message);
+                    alert("Review list fields adding fields");
+                });;
         }
 
+        addReview() {
+            var selected: NodeList = document.querySelectorAll('input.review[type="checkbox"]:checked');
+            var sucess = 0;
+            for (var i = 0; i < selected.length; i++) {
+                var item = <HTMLInputElement>selected.item(i);
+                var productItem = Enumerable.From(this.$scope.Products)
+                    .Where((product) => { return product.ProductID.toString() == item.value; })
+                    .SingleOrDefault(null);
+
+                var review: IReview = {
+                    ProductName: productItem.ProductName,
+                    SupplierName: productItem.CompanyName
+                }
+
+                this.dataService.addReview(review)
+                    .then((response) => {
+                        sucess++;
+                        if (sucess === selected.length) alert("Review(s) Added");
+                    })
+                    .catch((error) => { console.error(error); });
+
+                item.checked = false;
+                item.removeAttribute("checked");
+            }
+
+
+        }
 
         addFields = (remainigLists: string[]) => {
             if (typeof this.$scope.listInfo == undefined) {
@@ -175,6 +203,7 @@ module App {
                     this.addFields(remainigLists);
                 })
             } else {
+                var added = 0;
                 remainigLists.forEach((title, index) => {
 
                     var id = Enumerable
@@ -196,10 +225,11 @@ module App {
                     this.listService.addFields(
                         id, fieldData
                         ).then((inserted) => {
-                            console.log('fields inserted'); 
-                            if (index == remainigLists.length - 1) {
+                            console.log('fields inserted');
+                            added++;
+                            if (added == remainigLists.length) {
                                 this.loadExternalData();
-                            }                   
+                            }
                         }).catch((message) => {
                             console.log(message);
                             alert(message);
@@ -207,6 +237,7 @@ module App {
                 });
             }
         }
+
 
     }
 

@@ -1,4 +1,6 @@
-﻿/// <reference path="../typings/caml/camljs.d.ts" />
+﻿/// <reference path="executorService.ts" />
+/// <reference path="baseService.ts" />
+/// <reference path="../typings/caml/camljs.d.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
 /// <reference path="app.models.ts" />
 /// <reference path="../typings/angularjs/angular.d.ts" />
@@ -7,16 +9,19 @@ var App;
     "use strict";
 
     var DataService = (function () {
-        function DataService($http, $q, baseSvc) {
+        function DataService($http, $q, baseSvc, execSvc) {
             this.$http = $http;
             this.$q = $q;
             this.baseSvc = baseSvc;
+            this.execSvc = execSvc;
             this.context = SP.ClientContext.get_current();
             this.productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
 
             this.categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items?$select=CategoryID,CategoryName";
 
             this.supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items?$select=SupplierID,CompanyName";
+
+            this.reviewURL = App.Constants.URL.appweb + "/_api/SP.AppContextSite(@target)/web/lists/getbytitle('" + App.Constants.LIST.review + "')/items?@target='" + App.Constants.URL.hostWeb + "'";
         }
         DataService.prototype.getUserName = function () {
             var deffered = this.$q.defer();
@@ -161,15 +166,7 @@ var App;
         };
 
         DataService.prototype.addItem = function (data, url) {
-            var deffered = this.$q.defer();
-
-            this.baseSvc.postRequest(url, data).then(function (resp) {
-                deffered.resolve(resp);
-            }).catch(function (message) {
-                deffered.reject(message);
-            });
-
-            return deffered.promise;
+            return this.baseSvc.postRequest(url, data);
         };
 
         DataService.prototype.loadData = function () {
@@ -179,11 +176,15 @@ var App;
         };
 
         DataService.prototype.addReview = function (review) {
-            var deffered = this.$q.defer();
+            var data = {
+                '__metadata': { 'type': 'SP.Data.ReviewListItem' },
+                'ProductName': review.ProductName,
+                'CompanyName': review.SupplierName
+            };
 
-            return deffered.promise;
+            return this.execSvc.postRequest(this.reviewURL, data);
         };
-        DataService.$inject = ["$http", "$q", "baseService"];
+        DataService.$inject = ["$http", "$q", "baseService", "executorService"];
         return DataService;
     })();
 

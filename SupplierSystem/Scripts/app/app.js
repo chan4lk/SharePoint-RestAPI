@@ -428,7 +428,175 @@ var App;
     angular.module("app").factory("baseService", baseService);
 })(App || (App = {}));
 
+///#source 1 1 /Scripts/app/executorService.js
+// Install the angularjs.TypeScript.DefinitelyTyped NuGet package
+var App;
+(function (App) {
+    "use strict";
+
+    executorService.$inject = ["$q"];
+
+    function executorService($q) {
+        var service = {
+            getRequest: getData,
+            postRequest: postData,
+            mergeRequest: mergeData,
+            deleteRequest: deleteData,
+            proxyRequest: loadOData
+        };
+
+        function getData(url) {
+            var deffer = $q.defer();
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+
+            executor.executeAsync({
+                url: url,
+                headers: {
+                    'Accept': 'application/json;odata=verbose',
+                    'Content-Type': 'application/json;odata=verbose'
+                },
+                method: App.Constants.HTTP.GET,
+                Uint8Array: [],
+                success: (function (response) {
+                    deffer.resolve(response);
+                }),
+                error: (function (message) {
+                    deffer.reject(message);
+                })
+            });
+
+            return deffer.promise;
+        }
+
+        function postData(url, data) {
+            var deffer = $q.defer();
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+
+            executor.executeAsync({
+                url: url,
+                headers: {
+                    'Accept': 'application/json;odata=verbose',
+                    'Content-Type': 'application/json;odata=verbose',
+                    'X-RequestDigest': App.Constants.FormDigest
+                },
+                method: App.Constants.HTTP.POST,
+                body: JSON.stringify(data),
+                Uint8Array: [],
+                success: (function (response) {
+                    deffer.resolve(JSON.parse(response.body));
+                }),
+                error: (function (message) {
+                    deffer.reject(message);
+                })
+            });
+
+            return deffer.promise;
+        }
+
+        function mergeData(url, data) {
+            var deffer = $q.defer();
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+
+            executor.executeAsync({
+                url: url,
+                headers: {
+                    'Accept': 'application/json;odata=verbose',
+                    'Content-Type': 'application/json;odata=verbose',
+                    'X-RequestDigest': App.Constants.FormDigest,
+                    'X-HTTP-Method': App.Constants.HTTP.MERGE,
+                    'IF-Match': '*'
+                },
+                method: App.Constants.HTTP.POST,
+                body: JSON.stringify(data),
+                Uint8Array: [],
+                success: (function (response) {
+                    deffer.resolve(JSON.parse(response.body));
+                }),
+                error: (function (message) {
+                    deffer.reject(message);
+                })
+            });
+
+            return deffer.promise;
+        }
+
+        function deleteData(url) {
+            var deffer = $q.defer();
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+
+            this.executor.executeAsync({
+                url: url,
+                headers: {
+                    'X-RequestDigest': App.Constants.FormDigest,
+                    'X-HTTP-Method': App.Constants.HTTP.DELETE
+                },
+                method: App.Constants.HTTP.POST,
+                Uint8Array: [],
+                success: (function (response) {
+                    deffer.resolve(response);
+                }),
+                error: (function (message) {
+                    deffer.reject(message);
+                })
+            });
+
+            return deffer.promise;
+        }
+
+        function loadOData(url) {
+            var deffered = $q.defer();
+            var executor = new SP.RequestExecutor(App.Constants.URL.appweb);
+            executor.executeAsync({
+                url: "../_api/SP.WebProxy.invoke",
+                method: App.Constants.HTTP.POST,
+                body: JSON.stringify({
+                    "requestInfo": {
+                        "__metadata": { "type": "SP.WebRequestInfo" },
+                        "Url": url,
+                        "Method": App.Constants.HTTP.GET,
+                        "Headers": {
+                            "results": [{
+                                    "__metadata": { "type": "SP.KeyValue" },
+                                    "Key": "Content-Type",
+                                    "Value": "application/json;odata=verbose",
+                                    "ValueType": "Edm.String"
+                                }]
+                        }
+                    }
+                }),
+                headers: {
+                    "Accept": "application/json;odata=verbose",
+                    "Content-Type": "application/json;odata=verbose",
+                    "X-RequestDigest": App.Constants.FormDigest
+                },
+                Uint8Array: [],
+                success: (function (resp) {
+                    var statusCode = resp.data.d.Invoke.StatusCode;
+
+                    if (statusCode == App.Constants.STATUS.OK) {
+                        var values = JSON.parse(resp.data.d.Invoke.Body).value;
+                        deffered.resolve(values);
+                    } else {
+                        deffered.reject(statusCode);
+                    }
+                }),
+                error: (function (message) {
+                    deffered.reject(message);
+                })
+            });
+
+            return deffered.promise;
+        }
+
+        return service;
+    }
+
+    angular.module("app").factory("executorService", executorService);
+})(App || (App = {}));
+
 ///#source 1 1 /Scripts/app/dataSvc.js
+/// <reference path="executorService.ts" />
+/// <reference path="baseService.ts" />
 /// <reference path="../typings/caml/camljs.d.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
 /// <reference path="app.models.ts" />
@@ -438,16 +606,19 @@ var App;
     "use strict";
 
     var DataService = (function () {
-        function DataService($http, $q, baseSvc) {
+        function DataService($http, $q, baseSvc, execSvc) {
             this.$http = $http;
             this.$q = $q;
             this.baseSvc = baseSvc;
+            this.execSvc = execSvc;
             this.context = SP.ClientContext.get_current();
             this.productURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.product + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
 
             this.categoryURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.category + "')/items?$select=CategoryID,CategoryName";
 
             this.supplierURL = App.Constants.URL.appweb + "/_api/lists/getbytitle('" + App.Constants.LIST.supplier + "')/items?$select=SupplierID,CompanyName";
+
+            this.reviewURL = App.Constants.URL.appweb + "/_api/SP.AppContextSite(@target)/web/lists/getbytitle('" + App.Constants.LIST.review + "')/items?@target='" + App.Constants.URL.hostWeb + "'";
         }
         DataService.prototype.getUserName = function () {
             var deffered = this.$q.defer();
@@ -592,15 +763,7 @@ var App;
         };
 
         DataService.prototype.addItem = function (data, url) {
-            var deffered = this.$q.defer();
-
-            this.baseSvc.postRequest(url, data).then(function (resp) {
-                deffered.resolve(resp);
-            }).catch(function (message) {
-                deffered.reject(message);
-            });
-
-            return deffered.promise;
+            return this.baseSvc.postRequest(url, data);
         };
 
         DataService.prototype.loadData = function () {
@@ -610,11 +773,15 @@ var App;
         };
 
         DataService.prototype.addReview = function (review) {
-            var deffered = this.$q.defer();
+            var data = {
+                '__metadata': { 'type': 'SP.Data.ReviewListItem' },
+                'ProductName': review.ProductName,
+                'CompanyName': review.SupplierName
+            };
 
-            return deffered.promise;
+            return this.execSvc.postRequest(this.reviewURL, data);
         };
-        DataService.$inject = ["$http", "$q", "baseService"];
+        DataService.$inject = ["$http", "$q", "baseService", "executorService"];
         return DataService;
     })();
 
@@ -906,6 +1073,7 @@ var App;
                         _this.addFields(remainigLists);
                     });
                 } else {
+                    var added = 0;
                     remainigLists.forEach(function (title, index) {
                         var id = Enumerable.From(_this.$scope.listInfo).Where(function (info) {
                             return info.Title === title;
@@ -929,7 +1097,8 @@ var App;
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
                             console.log('fields inserted');
-                            if (index == remainigLists.length - 1) {
+                            added++;
+                            if (added == remainigLists.length) {
                                 _this.loadExternalData();
                             }
                         }).catch(function (message) {
@@ -943,7 +1112,9 @@ var App;
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-
+            $scope.AddReview = function () {
+                _this.addReview();
+            };
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
@@ -970,7 +1141,7 @@ var App;
         mainCtrl.prototype.loadListData = function () {
             var _this = this;
             this.dataService.getAll().then(function (listData) {
-                console.log(listData);
+                console.log('All the data loaded from odata');
                 var products = [];
                 listData.Products.forEach(function (item) {
                     var product = new App.Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
@@ -1057,6 +1228,33 @@ var App;
                 alert("Review list fields adding fields");
             });
             ;
+        };
+
+        mainCtrl.prototype.addReview = function () {
+            var selected = document.querySelectorAll('input.review[type="checkbox"]:checked');
+            var sucess = 0;
+            for (var i = 0; i < selected.length; i++) {
+                var item = selected.item(i);
+                var productItem = Enumerable.From(this.$scope.Products).Where(function (product) {
+                    return product.ProductID.toString() == item.value;
+                }).SingleOrDefault(null);
+
+                var review = {
+                    ProductName: productItem.ProductName,
+                    SupplierName: productItem.CompanyName
+                };
+
+                this.dataService.addReview(review).then(function (response) {
+                    sucess++;
+                    if (sucess === selected.length)
+                        alert("Review(s) Added");
+                }).catch(function (error) {
+                    console.error(error);
+                });
+
+                item.checked = false;
+                item.removeAttribute("checked");
+            }
         };
         mainCtrl.$inject = ["$scope", "dataSvc", "ListService"];
         return mainCtrl;

@@ -6,6 +6,7 @@
   <file>/Scripts/app/Config.js</file>
   <file>/Scripts/app/app.models.js</file>
   <file>/Scripts/app/baseService.js</file>
+  <file>/Scripts/app/executorService.js</file>
   <file>/Scripts/app/dataSvc.js</file>
   <file>/Scripts/app/ListService.js</file>
   <file>/Scripts/app/mainCtrl.js</file>

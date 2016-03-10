@@ -1,18 +1,19 @@
-﻿module App {
+﻿// Install the angularjs.TypeScript.DefinitelyTyped NuGet package
+module App {
     "use strict";
 
-    export interface IbaseService {
+    export interface IExecutorService {
         getRequest: <T>(url: string) => ng.IPromise<T>;
         postRequest: <T, U>(url: string, data: T) => ng.IPromise<U>;
         mergeRequest: <T, U>(url: string, data: T) => ng.IPromise<U>;
         deleteRequest: <T>(url: string) => ng.IPromise<T>;
-        proxyRequest: <T>(url: string)=> ng.IPromise<T>;
+        proxyRequest: <T>(url: string) => ng.IPromise<T>;
 
     }
 
-    baseService.$inject = ["$http", "$q"];
+    executorService.$inject = ["$q"];
 
-    function baseService($http: ng.IHttpService, $q: ng.IQService): IbaseService {
+    function executorService($q: ng.IQService): IExecutorService {
         var service: IbaseService = {
             getRequest: getData,
             postRequest: postData,
@@ -21,28 +22,32 @@
             proxyRequest: loadOData
         };
 
+
         function getData<T>(url: string): ng.IPromise<T> {
             var deffer = $q.defer();
-            $http({
+            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+
+            executor.executeAsync({
                 url: url,
                 headers:
                 {
                     'Accept': 'application/json;odata=verbose',
                     'Content-Type': 'application/json;odata=verbose',
                 },
-                method: Constants.HTTP.GET
-            }).then((resp) => {
-                    deffer.resolve(resp);
-                }).catch((error) => {
-                    deffer.reject(error);
-                });
+                method: Constants.HTTP.GET,
+                Uint8Array: [],
+                success: ((response) => { deffer.resolve(response); }),
+                error: ((message) => { deffer.reject(message); })
+            });
 
             return deffer.promise;
         }
 
         function postData<T, U>(url: string, data: T): ng.IPromise<U> {
             var deffer = $q.defer();
-            $http({
+            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+
+            executor.executeAsync({
                 url: url,
                 headers:
                 {
@@ -51,19 +56,20 @@
                     'X-RequestDigest': Constants.FormDigest
                 },
                 method: Constants.HTTP.POST,
-                data: data
-            }).then((resp) => {
-                    deffer.resolve(resp);
-                }).catch((error) => {
-                    deffer.reject(error);
-                });
+                body: JSON.stringify(data),
+                Uint8Array: [],
+                success: ((response) => { deffer.resolve(JSON.parse(response.body)); }),
+                error: ((message) => { deffer.reject(message); })
+            });
 
             return deffer.promise;
         }
 
         function mergeData<T, U>(url: string, data: T): ng.IPromise<U> {
             var deffer = $q.defer();
-            $http({
+            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+
+            executor.executeAsync({
                 url: url,
                 headers:
                 {
@@ -74,42 +80,42 @@
                     'IF-Match': '*'
                 },
                 method: Constants.HTTP.POST,
-                data: data
-            }).then((resp) => {
-                    deffer.resolve(resp);
-                }).catch((error) => {
-                    deffer.reject(error);
-                });
+                body: JSON.stringify(data),
+                Uint8Array: [],
+                success: ((response) => { deffer.resolve(JSON.parse(response.body)); }),
+                error: ((message) => { deffer.reject(message); })
+            });
 
             return deffer.promise;
         }
 
         function deleteData<T>(url: string): ng.IPromise<T> {
             var deffer = $q.defer();
-            $http({
+            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+
+            this.executor.executeAsync({
                 url: url,
                 headers:
                 {
                     'X-RequestDigest': Constants.FormDigest,
                     'X-HTTP-Method': Constants.HTTP.DELETE
                 },
-                method: Constants.HTTP.POST
-            }).then((resp) => {
-                    deffer.resolve(resp);
-                }).catch((error) => {
-                    deffer.reject(error);
-                });
+                method: Constants.HTTP.POST,
+                Uint8Array: [],
+                success: ((response) => { deffer.resolve(response); }),
+                error: ((message) => { deffer.reject(message); })
+            });
 
             return deffer.promise;
         }
 
         function loadOData<T>(url: string): ng.IPromise<T> {
             var deffered = $q.defer();
-
-            $http({
+            var executor: SP.RequestExecutor = new SP.RequestExecutor(Constants.URL.appweb);
+            executor.executeAsync({
                 url: "../_api/SP.WebProxy.invoke",
                 method: Constants.HTTP.POST,
-                data: JSON.stringify(
+                body: JSON.stringify(
                     {
                         "requestInfo": {
                             "__metadata": { "type": "SP.WebRequestInfo" },
@@ -129,10 +135,10 @@
                     "Accept": "application/json;odata=verbose",
                     "Content-Type": "application/json;odata=verbose",
                     "X-RequestDigest": Constants.FormDigest
-                }
-            })
-                .then((resp) => {
-                    var statusCode:number = resp.data.d.Invoke.StatusCode;
+                },
+                Uint8Array: [],
+                success: ((resp) => {
+                    var statusCode: number = resp.data.d.Invoke.StatusCode;
 
                     if (statusCode == Constants.STATUS.OK) {
                         var values: T = JSON.parse(resp.data.d.Invoke.Body).value;
@@ -140,10 +146,12 @@
                     } else {
                         deffered.reject(statusCode);
                     }
-                })
-                .catch((message) => {
+                }),
+                error: ((message) => {
                     deffered.reject(message);
-                });
+                })
+
+            });
 
             return deffered.promise;
         }
@@ -151,5 +159,6 @@
         return service;
     }
 
-    angular.module("app").factory("baseService", baseService);
+
+    angular.module("app").factory("executorService", executorService);
 }

@@ -1,4 +1,6 @@
-﻿/// <reference path="../typings/caml/camljs.d.ts" />
+﻿/// <reference path="executorService.ts" />
+/// <reference path="baseService.ts" />
+/// <reference path="../typings/caml/camljs.d.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
 /// <reference path="app.models.ts" />
 /// <reference path="../typings/angularjs/angular.d.ts" />
@@ -11,7 +13,7 @@ module App {
         getCategories: () => ng.IPromise<ICategory[]>;
         getSuppliers: () => ng.IPromise<ISupplier[]>;
         getUserName: () => ng.IPromise<string>;
-        getAll():  ng.IPromise<IListData>;
+        getAll(): ng.IPromise<IListData>;
         LoadExternal(): ng.IPromise<IListData>
         loadData(): ng.IPromise<IListData>;
         addReview(review: IReview): ng.IPromise<boolean>;
@@ -19,7 +21,7 @@ module App {
     }
 
     class DataService implements IDataService {
-        static $inject: string[] = ["$http", "$q", "baseService"];
+        static $inject: string[] = ["$http", "$q", "baseService", "executorService"];
         context: SP.ClientContext;
         productItems: SP.ListItemCollection;
         categoryItems: SP.ListItemCollection;
@@ -27,26 +29,35 @@ module App {
         productURL: string;
         categoryURL: string;
         supplierURL: string;
+        reviewURL: string;
         constructor(
             private $http: ng.IHttpService,
             private $q: ng.IQService,
-            private baseSvc: IbaseService) {
+            private baseSvc: IbaseService,
+            private execSvc: IExecutorService) {
 
             this.context = SP.ClientContext.get_current();
             this.productURL = Constants.URL.appweb
-                                + "/_api/lists/getbytitle('"
-                                + Constants.LIST.product
-                                + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
+            + "/_api/lists/getbytitle('"
+            + Constants.LIST.product
+            + "')/items?$select=ProductID,CategoryID,SupplierID,ProductName";
 
             this.categoryURL = Constants.URL.appweb
-                                + "/_api/lists/getbytitle('"
-                                + Constants.LIST.category
-                                + "')/items?$select=CategoryID,CategoryName";
+            + "/_api/lists/getbytitle('"
+            + Constants.LIST.category
+            + "')/items?$select=CategoryID,CategoryName";
 
             this.supplierURL = Constants.URL.appweb
-                                + "/_api/lists/getbytitle('"
-                                + Constants.LIST.supplier
-                                + "')/items?$select=SupplierID,CompanyName";
+            + "/_api/lists/getbytitle('"
+            + Constants.LIST.supplier
+            + "')/items?$select=SupplierID,CompanyName";
+
+            this.reviewURL = Constants.URL.appweb
+            + "/_api/SP.AppContextSite(@target)/web/lists/getbytitle('"
+            + Constants.LIST.review
+            + "')/items?@target='"
+            + Constants.URL.hostWeb
+            + "'";
 
         }
 
@@ -205,17 +216,7 @@ module App {
         }
 
         addItem(data: any, url: string): ng.IPromise<boolean> {
-            var deffered = this.$q.defer();
-
-            this.baseSvc.postRequest<any, any>(url, data)
-                .then((resp) => {
-                    deffered.resolve(resp);
-                })
-                .catch((message) => {
-                    deffered.reject(message);
-                });
-
-            return deffered.promise;
+            return this.baseSvc.postRequest<any, any>(url, data);
         }
 
         loadData(): ng.IPromise<IListData> {
@@ -225,9 +226,13 @@ module App {
         }
 
         addReview(review: IReview): ng.IPromise<boolean> {
-            var deffered = this.$q.defer();
+            var data = {
+                '__metadata': { 'type': 'SP.Data.ReviewListItem' },
+                'ProductName': review.ProductName,
+                'CompanyName': review.SupplierName
+            }
 
-            return deffered.promise;
+            return this.execSvc.postRequest(this.reviewURL, data);
         }
     }
 

@@ -32,6 +32,7 @@ var App;
                         _this.addFields(remainigLists);
                     });
                 } else {
+                    var added = 0;
                     remainigLists.forEach(function (title, index) {
                         var id = Enumerable.From(_this.$scope.listInfo).Where(function (info) {
                             return info.Title === title;
@@ -55,7 +56,8 @@ var App;
 
                         _this.listService.addFields(id, fieldData).then(function (inserted) {
                             console.log('fields inserted');
-                            if (index == remainigLists.length - 1) {
+                            added++;
+                            if (added == remainigLists.length) {
                                 _this.loadExternalData();
                             }
                         }).catch(function (message) {
@@ -69,7 +71,9 @@ var App;
             $scope.userName = '';
             $scope.review = false;
             $scope.addFields = this.addFields;
-
+            $scope.AddReview = function () {
+                _this.addReview();
+            };
             this.displayUserName();
             this.createAppWebLists();
             this.createReview();
@@ -96,7 +100,7 @@ var App;
         mainCtrl.prototype.loadListData = function () {
             var _this = this;
             this.dataService.getAll().then(function (listData) {
-                console.log(listData);
+                console.log('All the data loaded from odata');
                 var products = [];
                 listData.Products.forEach(function (item) {
                     var product = new App.Product(item.ProductID, item.ProductName, item.SupplierID, item.CategoryID);
@@ -183,6 +187,33 @@ var App;
                 alert("Review list fields adding fields");
             });
             ;
+        };
+
+        mainCtrl.prototype.addReview = function () {
+            var selected = document.querySelectorAll('input.review[type="checkbox"]:checked');
+            var sucess = 0;
+            for (var i = 0; i < selected.length; i++) {
+                var item = selected.item(i);
+                var productItem = Enumerable.From(this.$scope.Products).Where(function (product) {
+                    return product.ProductID.toString() == item.value;
+                }).SingleOrDefault(null);
+
+                var review = {
+                    ProductName: productItem.ProductName,
+                    SupplierName: productItem.CompanyName
+                };
+
+                this.dataService.addReview(review).then(function (response) {
+                    sucess++;
+                    if (sucess === selected.length)
+                        alert("Review(s) Added");
+                }).catch(function (error) {
+                    console.error(error);
+                });
+
+                item.checked = false;
+                item.removeAttribute("checked");
+            }
         };
         mainCtrl.$inject = ["$scope", "dataSvc", "ListService"];
         return mainCtrl;
