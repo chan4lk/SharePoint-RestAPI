@@ -32,7 +32,7 @@ var App;
         });
 
         it("shoud id not eqval 0", function () {
-            expect(product.ID).toBe(2);
+            expect(product.ProductID).toBe(2);
         });
 
         it("should return product name", function () {
@@ -46,12 +46,12 @@ var App;
 
         it("should have a supplier with same supplier id", function () {
             product.resolve(categories, suppliers);
-            expect(product.Supplier.ID).toEqual(product.SupplierID);
+            expect(product.Supplier.SupplierID).toEqual(product.SupplierID);
         });
 
         it("should have a category with same category id", function () {
             product.resolve(categories, suppliers);
-            expect(product.Category.ID).toEqual(product.CategoryID);
+            expect(product.Category.CategoryID).toEqual(product.CategoryID);
         });
 
         it("undefined shold not be true", function () {

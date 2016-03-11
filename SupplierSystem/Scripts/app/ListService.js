@@ -1,4 +1,7 @@
-﻿/// <reference path="../typings/linq/linq.d.ts" />
+﻿/// <reference path="executorService.ts" />
+/// <reference path="app.models.ts" />
+/// <reference path="Config.ts" />
+/// <reference path="../typings/linq/linq.d.ts" />
 /// <reference path="Utils.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
 /// <reference path="../typings/angularjs/angular.d.ts" />
@@ -28,15 +31,6 @@ var App;
         };
 
         ListService.prototype.getHostList = function (title) {
-            /// <summary>
-            /// Gets the Host list names.
-            /// </summary>
-            /// <param name="title" type="string">
-            /// Title of the list
-            /// </param>
-            /// <returns type="Promise">
-            /// True if exists.
-            /// </returns>
             var deffered = this.$q.defer();
 
             var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'";
@@ -119,7 +113,7 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title,Id";
             this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.d.results;
                 deffered.resolve(results);
@@ -201,6 +195,7 @@ var App;
         ListService.$inject = ["$q", "executorService"];
         return ListService;
     })();
+    App.ListService = ListService;
 
     angular.module("app").service("ListService", ListService);
 })(App || (App = {}));

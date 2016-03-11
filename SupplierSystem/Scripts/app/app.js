@@ -291,12 +291,12 @@ var App;
 (function (App) {
     "use strict";
 
-    var baseService = (function () {
-        function baseService($http, $q) {
+    var BaseService = (function () {
+        function BaseService($http, $q) {
             this.$http = $http;
             this.$q = $q;
         }
-        baseService.prototype.getRequest = function (url) {
+        BaseService.prototype.getRequest = function (url) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -314,7 +314,7 @@ var App;
             return deffer.promise;
         };
 
-        baseService.prototype.postRequest = function (url, data) {
+        BaseService.prototype.postRequest = function (url, data) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -334,7 +334,7 @@ var App;
             return deffer.promise;
         };
 
-        baseService.prototype.mergeRequest = function (url, data) {
+        BaseService.prototype.mergeRequest = function (url, data) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -356,7 +356,7 @@ var App;
             return deffer.promise;
         };
 
-        baseService.prototype.deleteRequest = function (url) {
+        BaseService.prototype.deleteRequest = function (url) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -374,7 +374,7 @@ var App;
             return deffer.promise;
         };
 
-        baseService.prototype.proxyRequest = function (url) {
+        BaseService.prototype.proxyRequest = function (url) {
             var deffered = this.$q.defer();
 
             this.$http({
@@ -415,11 +415,12 @@ var App;
 
             return deffered.promise;
         };
-        baseService.$inject = ["$http", "$q"];
-        return baseService;
+        BaseService.$inject = ["$http", "$q"];
+        return BaseService;
     })();
+    App.BaseService = BaseService;
 
-    angular.module("app").service("baseService", baseService);
+    angular.module("app").service("baseService", BaseService);
 })(App || (App = {}));
 
 ///#source 1 1 /Scripts/app/executorService.js
@@ -578,6 +579,7 @@ var App;
         ExecutorService.$inject = ["$q"];
         return ExecutorService;
     })();
+    App.ExecutorService = ExecutorService;
 
     angular.module("app").service("executorService", ExecutorService);
 })(App || (App = {}));
@@ -777,6 +779,9 @@ var App;
 })(App || (App = {}));
 
 ///#source 1 1 /Scripts/app/ListService.js
+/// <reference path="executorService.ts" />
+/// <reference path="app.models.ts" />
+/// <reference path="Config.ts" />
 /// <reference path="../typings/linq/linq.d.ts" />
 /// <reference path="Utils.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
@@ -807,15 +812,6 @@ var App;
         };
 
         ListService.prototype.getHostList = function (title) {
-            /// <summary>
-            /// Gets the Host list names.
-            /// </summary>
-            /// <param name="title" type="string">
-            /// Title of the list
-            /// </param>
-            /// <returns type="Promise">
-            /// True if exists.
-            /// </returns>
             var deffered = this.$q.defer();
 
             var url = this.appWebUrl + "/_api/SP.AppContextSite(@target)/web/lists?$select=Title,Id&@target='" + this.hostWebUrl + "'";
@@ -898,7 +894,7 @@ var App;
 
         ListService.prototype.getLists = function () {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title,Id";
             this.$execSvc.getRequest(url).then(function (resp) {
                 var results = resp.d.results;
                 deffered.resolve(results);
@@ -980,6 +976,7 @@ var App;
         ListService.$inject = ["$q", "executorService"];
         return ListService;
     })();
+    App.ListService = ListService;
 
     angular.module("app").service("ListService", ListService);
 })(App || (App = {}));

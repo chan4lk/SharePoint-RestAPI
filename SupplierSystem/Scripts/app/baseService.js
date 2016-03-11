@@ -2,12 +2,12 @@
 (function (App) {
     "use strict";
 
-    var baseService = (function () {
-        function baseService($http, $q) {
+    var BaseService = (function () {
+        function BaseService($http, $q) {
             this.$http = $http;
             this.$q = $q;
         }
-        baseService.prototype.getRequest = function (url) {
+        BaseService.prototype.getRequest = function (url) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -25,7 +25,7 @@
             return deffer.promise;
         };
 
-        baseService.prototype.postRequest = function (url, data) {
+        BaseService.prototype.postRequest = function (url, data) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -45,7 +45,7 @@
             return deffer.promise;
         };
 
-        baseService.prototype.mergeRequest = function (url, data) {
+        BaseService.prototype.mergeRequest = function (url, data) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -67,7 +67,7 @@
             return deffer.promise;
         };
 
-        baseService.prototype.deleteRequest = function (url) {
+        BaseService.prototype.deleteRequest = function (url) {
             var deffer = this.$q.defer();
             this.$http({
                 url: url,
@@ -85,7 +85,7 @@
             return deffer.promise;
         };
 
-        baseService.prototype.proxyRequest = function (url) {
+        BaseService.prototype.proxyRequest = function (url) {
             var deffered = this.$q.defer();
 
             this.$http({
@@ -126,9 +126,10 @@
 
             return deffered.promise;
         };
-        baseService.$inject = ["$http", "$q"];
-        return baseService;
+        BaseService.$inject = ["$http", "$q"];
+        return BaseService;
     })();
+    App.BaseService = BaseService;
 
-    angular.module("app").service("baseService", baseService);
+    angular.module("app").service("baseService", BaseService);
 })(App || (App = {}));

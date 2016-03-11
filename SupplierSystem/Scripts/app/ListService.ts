@@ -1,4 +1,7 @@
-﻿/// <reference path="../typings/linq/linq.d.ts" />
+﻿/// <reference path="executorService.ts" />
+/// <reference path="app.models.ts" />
+/// <reference path="Config.ts" />
+/// <reference path="../typings/linq/linq.d.ts" />
 /// <reference path="Utils.ts" />
 /// <reference path="../typings/sharepoint/SharePoint.d.ts" />
 /// <reference path="../typings/angularjs/angular.d.ts" />
@@ -15,7 +18,7 @@ module App {
         getFormDigest(): ng.IPromise<string>;
     }
 
-    class ListService implements IListService {
+    export class ListService implements IListService {
         static $inject: string[] = ["$q", "executorService"];
         context: SP.ClientContext;
         appWebUrl: string = Constants.URL.appweb;
@@ -37,15 +40,6 @@ module App {
         }
 
         getHostList(title: string): ng.IPromise<boolean> {
-            /// <summary>
-            /// Gets the Host list names. 
-            /// </summary>
-            /// <param name="title" type="string">
-            /// Title of the list
-            /// </param>
-            /// <returns type="Promise">
-            /// True if exists.
-            /// </returns>
 
             var deffered = this.$q.defer();
 
@@ -65,9 +59,9 @@ module App {
 
                     var site = Enumerable
                         .From(sites)
-                        .Where((item: IListResuts) => { 
-                                return item.Title == title
-                            })
+                        .Where((item: IListResuts) => {
+                            return item.Title == title
+                        })
                         .Select((item: IListResuts) => { return item; })
                         .SingleOrDefault(null);
 
@@ -141,7 +135,7 @@ module App {
 
         getLists(): ng.IPromise<IListInfo[]> {
             var deffered = this.$q.defer();
-            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title";
+            var url = this.appWebUrl + "/_api/Web/Lists?$select=Title,Id";
             this.$execSvc.getRequest<SP.Responses.IListResponse>(url)
                 .then((resp) => {
                     var results: IListInfo[] = resp.d.results;
@@ -156,12 +150,12 @@ module App {
         getFormDigest(): ng.IPromise<string> {
             var deffered = this.$q.defer();
             var url = this.appWebUrl + "/_api/contextInfo";
-            this.$execSvc.postRequest <any, SP.Responses.IContextInfo>(url, {}).then((resp) => {
-                    var results = resp.d;
-                    deffered.resolve(results.GetContextWebInformation.FormDigestValue);
-                }).catch((reason) => {
-                    deffered.reject(reason);
-                });
+            this.$execSvc.postRequest<any, SP.Responses.IContextInfo>(url, {}).then((resp) => {
+                var results = resp.d;
+                deffered.resolve(results.GetContextWebInformation.FormDigestValue);
+            }).catch((reason) => {
+                deffered.reject(reason);
+            });
 
             return deffered.promise;
         }
@@ -184,8 +178,8 @@ module App {
             var url = this.appWebUrl + "/_api/Web/Lists(guid'" + id + "')/fields";
             if (toHostList) {
                 url = Constants.URL.appweb
-                + "/_api/SP.AppContextSite(@target)/web/Lists(guid'" + id + "')/fields?@target='"
-                + Constants.URL.hostWeb + "'";
+                    + "/_api/SP.AppContextSite(@target)/web/Lists(guid'" + id + "')/fields?@target='"
+                    + Constants.URL.hostWeb + "'";
             }
 
             //this.getFormDigest()

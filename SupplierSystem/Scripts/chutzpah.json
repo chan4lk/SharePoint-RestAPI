@@ -5,7 +5,7 @@
     "ExtensionsWithNoOutput": [".d.ts"]
    },
   "References": [
-    {"Includes": ["*/Scripts/app/*.ts", "*/Scripts/angular.js"], "Excludes": ["*/Scripts/app/*.d.ts"] }
+    {"Includes": ["*/Scripts/app/*.ts", "*/Scripts/angular.js","*/Scripts/mocks.js"], "Excludes": ["*/Scripts/app/*.d.ts"] }
   ],
   "Tests": [
     { "Includes": ["*/Scripts/tests/*.ts"], "Excludes": ["*/Scripts/tests/*.d.ts"] }

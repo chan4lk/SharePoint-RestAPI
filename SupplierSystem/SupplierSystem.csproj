@@ -46,6 +46,7 @@
       <SharePointProjectItemId>{8ee5625d-2adc-4766-8ea4-bd67e6bb6726}</SharePointProjectItemId>
     </None>
     <Content Include="DeploymentSettings.xml" />
+    <Content Include="Scripts\mocks.js" />
     <Content Include="Scripts\angular-route.min.js" />
     <Content Include="Scripts\angular.js" />
     <Content Include="Scripts\app\app.js">
@@ -100,6 +101,7 @@
     </Content>
     <Content Include="Scripts\app\dataSvc.ts" />
     <Content Include="Scripts\linq.min.js" />
+    <Content Include="Scripts\tests\ListServiceTests.ts" />
     <Content Include="Scripts\tests\spec1.ts" />
     <Content Include="Scripts\typings\angularjs\angular-cookies.d.ts" />
     <Content Include="Scripts\typings\angularjs\angular-mocks.d.ts" />

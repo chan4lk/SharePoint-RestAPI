@@ -11,7 +11,7 @@ module App {
 
     }
 
-    class ExecutorService implements IExecutorService{
+    export class ExecutorService implements IExecutorService{
         static $inject: string[] = ["$q"];
 
         private executor: SP.RequestExecutor;

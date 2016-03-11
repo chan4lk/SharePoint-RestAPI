@@ -44,5 +44,7 @@
     <ProjectItemFile Source="underscore-min.js" Target="Scripts\" Type="ElementFile" />
     <ProjectItemFile Source="app\executorService.ts" Target="Scripts\app\" Type="ElementFile" />
     <ProjectItemFile Source="app\executorService.js" Target="Scripts\app\" Type="ElementFile" />
+    <ProjectItemFile Source="tests\ListServiceTests.ts" Target="Scripts\tests\" Type="ElementFile" />
+    <ProjectItemFile Source="mocks.js" Target="Scripts\" Type="ElementFile" />
   </Files>
 </ProjectItem>

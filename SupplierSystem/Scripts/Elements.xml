@@ -20,5 +20,7 @@
     <File Path="Scripts\app\baseService.js" Url="Scripts/app/baseService.js" ReplaceContent="TRUE" />
     <File Path="Scripts\underscore-min.js" Url="Scripts/underscore-min.js" ReplaceContent="TRUE" />
     <File Path="Scripts\app\executorService.js" Url="Scripts/app/executorService.js" ReplaceContent="TRUE" />
+    <File Path="Scripts\tests\ListServiceTests.ts" Url="Scripts/tests/ListServiceTests.ts" ReplaceContent="TRUE" />
+    <File Path="Scripts\mocks.js" Url="Scripts/mocks.js" ReplaceContent="TRUE" />
   </Module>
 </Elements>

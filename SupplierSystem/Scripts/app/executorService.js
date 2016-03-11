@@ -153,6 +153,7 @@ var App;
         ExecutorService.$inject = ["$q"];
         return ExecutorService;
     })();
+    App.ExecutorService = ExecutorService;
 
     angular.module("app").service("executorService", ExecutorService);
 })(App || (App = {}));
